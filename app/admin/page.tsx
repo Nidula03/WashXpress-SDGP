@@ -1,20 +1,119 @@
 // app/admin/page.tsx
+"use client";
+
+import { useEffect, useState } from "react";
+
+interface FirestoreData {
+  bookings: any[];
+  customers: any[];
+  password_resets: any[];
+  users: any[];
+  washers: any[];
+}
+
+interface ApiResponse {
+  ok: boolean;
+  data: FirestoreData;
+  counts: {
+    bookings: number;
+    customers: number;
+    password_resets: number;
+    users: number;
+    washers: number;
+  };
+}
+
 export default function AdminDashboard() {
+  const [data, setData] = useState<FirestoreData | null>(null);
+  const [counts, setCounts] = useState({
+    bookings: 0,
+    customers: 0,
+    password_resets: 0,
+    users: 0,
+    washers: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("/api/firebase/firestore-check");
+        const json: ApiResponse = await res.json();
+        
+        if (json.ok) {
+          setData(json.data);
+          setCounts(json.counts);
+        } else {
+          setError("Failed to fetch data");
+        }
+      } catch (err) {
+        setError("Error connecting to database");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  // Get pending washers count (assuming there's a status or verified field)
+  const pendingWashers = data?.washers?.filter(
+    (w) => w.status === "pending" || w.verified === false
+  ).length ?? 0;
+
+  // Get active subscriptions (you may need to adjust based on your data structure)
+  const activeSubscriptions = data?.customers?.filter(
+    (c) => c.subscription?.status === "active" || c.subscriptionStatus === "active"
+  ).length ?? 0;
+
+  // Format customer rows for table
+  const customerRows = data?.customers?.slice(0, 3).map((c) => [
+    c.name || c.displayName || "—",
+    c.email || "—",
+    c.plan || c.subscription?.plan || "—",
+    c.status || "Active",
+  ]) || [["—", "—", "—", "—"], ["—", "—", "—", "—"], ["—", "—", "—", "—"]];
+
+  // Format washer rows for table
+  const washerRows = data?.washers?.slice(0, 3).map((w) => [
+    w.name || w.displayName || "—",
+    w.phone || w.phoneNumber || "—",
+    w.active ? "Yes" : "No",
+    w.verified ? "Verified" : "Pending",
+  ]) || [["—", "—", "—", "—"], ["—", "—", "—", "—"], ["—", "—", "—", "—"]];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-64">
+        <div className="text-slate-500">Loading dashboard data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-64">
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* KPI cards (larger) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard title="Total Customers" value="—" hint="All registered customers" />
-        <MetricCard title="Total Washers" value="—" hint="All washer accounts" />
-        <MetricCard title="Active Subscriptions" value="—" hint="Currently active plans" />
-        <MetricCard title="Pending Washers" value="—" hint="Awaiting verification" />
+        <MetricCard title="Total Customers" value={counts.customers} hint="All registered customers" />
+        <MetricCard title="Total Washers" value={counts.washers} hint="All washer accounts" />
+        <MetricCard title="Active Subscriptions" value={activeSubscriptions} hint="Currently active plans" />
+        <MetricCard title="Pending Washers" value={pendingWashers} hint="Awaiting verification" />
       </div>
 
       {/* Main content grid (larger panels) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Panel
           title="Customers"
-          subtitle="Recent customers and basic info"
+          subtitle={`Recent customers (${counts.customers} total)`}
           actions={
             <div className="flex gap-2">
               <button className="rounded-xl border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50">
@@ -28,17 +127,13 @@ export default function AdminDashboard() {
         >
           <MiniTable
             columns={["Name", "Email", "Plan", "Status"]}
-            rows={[
-              ["—", "—", "—", "—"],
-              ["—", "—", "—", "—"],
-              ["—", "—", "—", "—"],
-            ]}
+            rows={customerRows}
           />
         </Panel>
 
         <Panel
           title="Washers"
-          subtitle="Recent washers and verification status"
+          subtitle={`Recent washers (${counts.washers} total)`}
           actions={
             <div className="flex gap-2">
               <button className="rounded-xl border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50">
@@ -52,11 +147,7 @@ export default function AdminDashboard() {
         >
           <MiniTable
             columns={["Name", "Phone", "Active", "Verification"]}
-            rows={[
-              ["—", "—", "—", "—"],
-              ["—", "—", "—", "—"],
-              ["—", "—", "—", "—"],
-            ]}
+            rows={washerRows}
           />
         </Panel>
       </div>
