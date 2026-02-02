@@ -1,19 +1,17 @@
 "use client";
 import { useClerk } from "@clerk/nextjs";
+import { useEffect } from "react";
 
 export default function SignOutPage() {
   const { signOut } = useClerk();
 
-  const handleSignOut = async () => {
-    await signOut({ redirectUrl: "/" });
-  };
+  useEffect(() => {
+    signOut({ redirectUrl: "/" });
+  }, [signOut]);
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Sign out</h1>
-      <button onClick={handleSignOut} style={{ padding: 12, border: "1px solid #ccc" }}>
-        Sign out
-      </button>
+    <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className="text-white text-lg">Signing out...</div>
     </div>
   );
 }

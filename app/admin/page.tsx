@@ -68,12 +68,12 @@ export default function AdminDashboard() {
   ).length ?? 0;
 
   // Format customer rows for table
-  const customerRows = data?.customers?.slice(0, 3).map((c) => [
+  const customerRows = data?.customers?.map((c) => [
     c.name || c.displayName || "—",
     c.email || "—",
     c.plan || c.subscription?.plan || "—",
     c.status || "Active",
-  ]) || [["—", "—", "—", "—"], ["—", "—", "—", "—"], ["—", "—", "—", "—"]];
+  ]) || [["—", "—", "—", "—"]];
 
   // Format washer rows for table
   const washerRows = data?.washers?.slice(0, 3).map((w) => [
