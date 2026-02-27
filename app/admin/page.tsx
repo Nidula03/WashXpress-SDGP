@@ -7,6 +7,7 @@ interface FirestoreData {
   bookings: any[];
   customers: any[];
   password_resets: any[];
+  providers: any[];
   users: any[];
   washers: any[];
 }
@@ -18,6 +19,7 @@ interface ApiResponse {
     bookings: number;
     customers: number;
     password_resets: number;
+    providers: number;
     users: number;
     washers: number;
   };
@@ -29,18 +31,71 @@ export default function AdminDashboard() {
     bookings: 0,
     customers: 0,
     password_resets: 0,
+    providers: 0,
     users: 0,
     washers: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function deleteCustomer(id: string) {
+    if (!confirm("Are you sure you want to delete this customer?")) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch("/api/firebase/delete-customer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const json = await res.json();
+      if (json.ok && data) {
+        const updated = data.customers.filter((c: any) => c.id !== id);
+        setData({ ...data, customers: updated });
+        setCounts((prev) => ({ ...prev, customers: prev.customers - 1 }));
+      } else {
+        alert("Failed to delete: " + (json.error || "Unknown error"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting customer");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function approveWasher(id: string) {
+    setApprovingId(id);
+    try {
+      const res = await fetch("/api/firebase/approve-provider", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const json = await res.json();
+      if (json.ok && data) {
+        const updated = data.providers.map((w: any) =>
+          w.id === id ? { ...w, verified: true, active: true, status: "approved" } : w
+        );
+        setData({ ...data, providers: updated });
+      } else {
+        alert("Failed to approve: " + (json.error || "Unknown error"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error approving washer");
+    } finally {
+      setApprovingId(null);
+    }
+  }
 
   useEffect(() => {
     async function fetchData() {
       try {
         const res = await fetch("/api/firebase/firestore-check");
         const json: ApiResponse = await res.json();
-        
+
         if (json.ok) {
           setData(json.data);
           setCounts(json.counts);
@@ -57,9 +112,9 @@ export default function AdminDashboard() {
     fetchData();
   }, []);
 
-  // Get pending washers count (assuming there's a status or verified field)
-  const pendingWashers = data?.washers?.filter(
-    (w) => w.status === "pending" || w.verified === false
+  // Get pending washers count (from providers collection)
+  const pendingWashers = data?.providers?.filter(
+    (w) => w.status === "pending" || w.verified !== true
   ).length ?? 0;
 
   // Get active subscriptions (you may need to adjust based on your data structure)
@@ -71,12 +126,13 @@ export default function AdminDashboard() {
   const customerRows = data?.customers?.map((c) => [
     c.name || c.displayName || "—",
     c.email || "—",
+    c.phone || c.phoneNumber || "—",
     c.plan || c.subscription?.plan || "—",
     c.status || "Active",
-  ]) || [["—", "—", "—", "—"]];
+  ]) || [["—", "—", "—", "—", "—"]];
 
-  // Format washer rows for table
-  const washerRows = data?.washers?.slice(0, 3).map((w) => [
+  // Format washer rows for table (from providers collection)
+  const washerRows = data?.providers?.map((w) => [
     w.name || w.displayName || "—",
     w.phone || w.phoneNumber || "—",
     w.active ? "Yes" : "No",
@@ -104,7 +160,7 @@ export default function AdminDashboard() {
       {/* KPI cards (larger) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard title="Total Customers" value={counts.customers} hint="All registered customers" />
-        <MetricCard title="Total Washers" value={counts.washers} hint="All washer accounts" />
+        <MetricCard title="Total Washers" value={counts.providers} hint="All washer accounts" />
         <MetricCard title="Active Subscriptions" value={activeSubscriptions} hint="Currently active plans" />
         <MetricCard title="Pending Washers" value={pendingWashers} hint="Awaiting verification" />
       </div>
@@ -125,15 +181,45 @@ export default function AdminDashboard() {
             </div>
           }
         >
-          <MiniTable
-            columns={["Name", "Email", "Plan", "Status"]}
-            rows={customerRows}
-          />
+          <div className="overflow-x-auto rounded-2xl border border-slate-100">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50">
+                <tr className="text-left text-slate-500">
+                  <th className="px-4 py-3 font-medium">Name</th>
+                  <th className="px-4 py-3 font-medium">Email</th>
+                  <th className="px-4 py-3 font-medium">Phone</th>
+                  <th className="px-4 py-3 font-medium">Plan</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data?.customers?.map((c: any) => (
+                  <tr key={c.id} className="border-t border-slate-100">
+                    <td className="px-4 py-3 text-slate-700">{c.name || c.displayName || "—"}</td>
+                    <td className="px-4 py-3 text-slate-700">{c.email || "—"}</td>
+                    <td className="px-4 py-3 text-slate-700">{c.phone || c.phoneNumber || "—"}</td>
+                    <td className="px-4 py-3 text-slate-700">{c.plan || c.subscription?.plan || "—"}</td>
+                    <td className="px-4 py-3 text-slate-700">{c.status || "Active"}</td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => deleteCustomer(c.id)}
+                        disabled={deletingId === c.id}
+                        className="rounded-lg bg-red-600 text-white px-2.5 py-1 text-xs font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      >
+                        {deletingId === c.id ? "..." : "Delete"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Panel>
 
         <Panel
           title="Washers"
-          subtitle={`Recent washers (${counts.washers} total)`}
+          subtitle={`Recent washers (${counts.providers} total)`}
           actions={
             <div className="flex gap-2">
               <button className="rounded-xl border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50">
@@ -145,10 +231,43 @@ export default function AdminDashboard() {
             </div>
           }
         >
-          <MiniTable
-            columns={["Name", "Phone", "Active", "Verification"]}
-            rows={washerRows}
-          />
+          <div className="overflow-x-auto rounded-2xl border border-slate-100">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50">
+                <tr className="text-left text-slate-500">
+                  <th className="px-4 py-3 font-medium">Name</th>
+                  <th className="px-4 py-3 font-medium">Phone</th>
+                  <th className="px-4 py-3 font-medium">Active</th>
+                  <th className="px-4 py-3 font-medium">Verification</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data?.providers?.map((w: any) => (
+                  <tr key={w.id} className="border-t border-slate-100">
+                    <td className="px-4 py-3 text-slate-700">{w.name || w.displayName || "—"}</td>
+                    <td className="px-4 py-3 text-slate-700">{w.phone || w.phoneNumber || "—"}</td>
+                    <td className="px-4 py-3 text-slate-700">{(w.active || w.verified) ? "Yes" : "No"}</td>
+                    <td className="px-4 py-3">
+                      {w.verified ? (
+                        <span className="inline-flex items-center rounded-full bg-blue-50 text-blue-700 px-2.5 py-1 text-xs font-medium">✓ Verified</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-2">
+                          <span className="inline-flex items-center rounded-full bg-amber-50 text-amber-700 px-2.5 py-1 text-xs font-medium">Pending</span>
+                          <button
+                            onClick={() => approveWasher(w.id)}
+                            disabled={approvingId === w.id}
+                            className="rounded-lg bg-green-600 text-white px-2.5 py-1 text-xs font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                          >
+                            {approvingId === w.id ? "..." : "Approve"}
+                          </button>
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Panel>
       </div>
     </div>
