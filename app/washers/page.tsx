@@ -26,6 +26,7 @@ export default function WashersPage() {
   const [filter, setFilter] = useState<"all" | "active" | "pending">("all");
   const [search, setSearch] = useState("");
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function approveWasher(id: string) {
     setApprovingId(id);
@@ -50,6 +51,29 @@ export default function WashersPage() {
       alert("Error approving washer");
     } finally {
       setApprovingId(null);
+    }
+  }
+
+  async function deleteWasher(id: string) {
+    if (!confirm("Are you sure you want to delete this washer?")) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch("/api/firebase/delete-provider", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const json = await res.json();
+      if (json.ok) {
+        setWashers((prev) => prev.filter((w) => w.id !== id));
+      } else {
+        alert("Failed to delete washer: " + (json.error || "Unknown error"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting washer");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -219,17 +243,24 @@ export default function WashersPage() {
                         {w.completedWashes ?? "—"}
                       </td>
                       <td className="px-6 py-4">
-                        {!w.verified ? (
+                        <div className="flex items-center gap-2">
+                          {!w.verified && (
+                            <button
+                              onClick={() => approveWasher(w.id)}
+                              disabled={approvingId === w.id}
+                              className="rounded-lg bg-green-600 text-white px-3 py-1.5 text-xs font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                              {approvingId === w.id ? "Approving..." : "✓ Approve"}
+                            </button>
+                          )}
                           <button
-                            onClick={() => approveWasher(w.id)}
-                            disabled={approvingId === w.id}
-                            className="rounded-lg bg-green-600 text-white px-3 py-1.5 text-xs font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            onClick={() => deleteWasher(w.id)}
+                            disabled={deletingId === w.id}
+                            className="rounded-lg bg-red-600 text-white px-3 py-1.5 text-xs font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                           >
-                            {approvingId === w.id ? "Approving..." : "✓ Approve"}
+                            {deletingId === w.id ? "Deleting..." : "✕ Delete"}
                           </button>
-                        ) : (
-                          <span className="text-xs text-slate-400">—</span>
-                        )}
+                        </div>
                       </td>
                     </tr>
                   ))

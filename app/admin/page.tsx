@@ -39,6 +39,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingWasherId, setDeletingWasherId] = useState<string | null>(null);
 
   async function deleteCustomer(id: string) {
     if (!confirm("Are you sure you want to delete this customer?")) return;
@@ -87,6 +88,31 @@ export default function AdminDashboard() {
       alert("Error approving washer");
     } finally {
       setApprovingId(null);
+    }
+  }
+
+  async function deleteWasher(id: string) {
+    if (!confirm("Are you sure you want to delete this washer?")) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch("/api/firebase/delete-provider", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const json = await res.json();
+      if (json.ok && data) {
+        const updated = data.providers.filter((w: any) => w.id !== id);
+        setData({ ...data, providers: updated });
+        setCounts((prev) => ({ ...prev, providers: prev.providers - 1 }));
+      } else {
+        alert("Failed to delete washer: " + (json.error || "Unknown error"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting washer");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -239,6 +265,7 @@ export default function AdminDashboard() {
                   <th className="px-4 py-3 font-medium">Phone</th>
                   <th className="px-4 py-3 font-medium">Active</th>
                   <th className="px-4 py-3 font-medium">Verification</th>
+                  <th className="px-4 py-3 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -262,6 +289,15 @@ export default function AdminDashboard() {
                           </button>
                         </span>
                       )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => deleteWasher(w.id)}
+                        disabled={deletingId === w.id}
+                        className="rounded-lg bg-red-600 text-white px-2.5 py-1 text-xs font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      >
+                        {deletingId === w.id ? "..." : "Delete"}
+                      </button>
                     </td>
                   </tr>
                 ))}
