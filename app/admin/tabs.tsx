@@ -26,8 +26,8 @@ export default function AdminTabs() {
             className={[
               "shrink-0 rounded-full px-4 py-2 text-sm border transition",
               active
-                ? "bg-slate-900 text-white border-slate-900"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50",
+                ? "text-white border-[#0ca6e8] bg-[#0ca6e8]"
+                : "bg-transparent text-slate-300 border-slate-600 hover:bg-[#0ca6e8] hover:text-white hover:border-[#0ca6e8]",
             ].join(" ")}
           >
             {t.label}
