@@ -1,7 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "washXpress@gmail.com").toLowerCase().trim();
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "washxpress.lk@gmail.com").toLowerCase().trim();
 
 // Only guard admin area; keep other pages public
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
