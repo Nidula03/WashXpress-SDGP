@@ -14,10 +14,8 @@ export default function Page() {
         strategy: "oauth_google",
         redirectUrl: "/sign-in/sso-callback",
         redirectUrlComplete: "/admin",
-        additionalParams: {
-          prompt: "select_account",
-        },
       });
+      
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sign in failed");
     }
