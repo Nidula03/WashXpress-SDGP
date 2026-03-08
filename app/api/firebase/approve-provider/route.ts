@@ -17,6 +17,13 @@ export async function POST(request: Request) {
             verified: true,
             active: true,
             status: "approved",
+            isActive: true,
+            isVerified: true,
+            certificationStatus: "certified",
+            washerStatus: "available",
+            "certificationReview.status": "approved",
+            "certificationReview.reviewedAt": new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
         });
 
         return NextResponse.json({ ok: true, message: "Provider approved successfully" });
