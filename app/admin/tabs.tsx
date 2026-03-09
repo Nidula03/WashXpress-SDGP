@@ -10,6 +10,7 @@ const tabs = [
   { href: "/admin/complaints", label: "Complaints" },
   { href: "/admin/certification", label: "Washer Certification" },
   { href: "/admin/analytics", label: "Analytics" },
+  { href: "/admin/pricing", label: "Pricing" },
 ];
 
 export default function AdminTabs() {
