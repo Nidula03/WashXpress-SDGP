@@ -125,7 +125,11 @@ export default function PricingPage() {
 
   function openEdit(plan: Plan) {
     setIsNew(false);
-    setEditingPlan({ ...plan, features: [...plan.features] });
+    setEditingPlan({
+      ...plan,
+      allowances: plan.allowances ?? { washes: 0, interiorCleans: 0, tireCleans: 0, fullDetails: 0 },
+      features: [...(plan.features ?? [])],
+    });
     setFeatureInput("");
   }
 
@@ -201,10 +205,10 @@ export default function PricingPage() {
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Monthly Allowances</p>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { label: "Washes", val: plan.allowances.washes, icon: "🚿" },
-                    { label: "Interior", val: plan.allowances.interiorCleans, icon: "🧹" },
-                    { label: "Tires", val: plan.allowances.tireCleans, icon: "⚙️" },
-                    { label: "Full Detail", val: plan.allowances.fullDetails, icon: "✨" },
+                    { label: "Washes", val: plan.allowances?.washes ?? 0, icon: "🚿" },
+                    { label: "Interior", val: plan.allowances?.interiorCleans ?? 0, icon: "🧹" },
+                    { label: "Tires", val: plan.allowances?.tireCleans ?? 0, icon: "⚙️" },
+                    { label: "Full Detail", val: plan.allowances?.fullDetails ?? 0, icon: "✨" },
                   ].map((a) => (
                     <div key={a.label} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
                       <span className="text-base">{a.icon}</span>
