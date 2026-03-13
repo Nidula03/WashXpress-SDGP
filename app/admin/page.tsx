@@ -262,6 +262,7 @@ export default function AdminDashboard() {
               <thead className="bg-slate-50">
                 <tr className="text-left text-slate-500">
                   <th className="px-4 py-3 font-medium">Name</th>
+                  <th className="px-4 py-3 font-medium">Email</th>
                   <th className="px-4 py-3 font-medium">Phone</th>
                   <th className="px-4 py-3 font-medium">Active</th>
                   <th className="px-4 py-3 font-medium">Verification</th>
@@ -272,6 +273,7 @@ export default function AdminDashboard() {
                 {data?.providers?.map((w: any) => (
                   <tr key={w.id} className="border-t border-slate-100">
                     <td className="px-4 py-3 text-slate-700">{w.name || w.displayName || "—"}</td>
+                    <td className="px-4 py-3 text-slate-700">{w.email || "—"}</td>
                     <td className="px-4 py-3 text-slate-700">{w.phone || w.phoneNumber || "—"}</td>
                     <td className="px-4 py-3 text-slate-700">{(w.active || w.verified) ? "Yes" : "No"}</td>
                     <td className="px-4 py-3">

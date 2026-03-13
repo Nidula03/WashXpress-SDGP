@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { app } from "@/lib/firebase";
 import { getApps, type FirebaseOptions } from "firebase/app";
