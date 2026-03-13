@@ -39,7 +39,11 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [deletingWasherId, setDeletingWasherId] = useState<string | null>(null);
+
+  // Edit State
+  const [editingCustomer, setEditingCustomer] = useState<any | null>(null);
+  const [editingWasher, setEditingWasher] = useState<any | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   async function deleteCustomer(id: string) {
     if (!confirm("Are you sure you want to delete this customer?")) return;
@@ -113,6 +117,64 @@ export default function AdminDashboard() {
       alert("Error deleting washer");
     } finally {
       setDeletingId(null);
+    }
+  }
+
+  async function updateCustomer(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!editingCustomer) return;
+    setSavingEdit(true);
+
+    try {
+      const res = await fetch("/api/firebase/update-customer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingCustomer),
+      });
+      const json = await res.json();
+      if (json.ok && data) {
+        const updated = data.customers.map((c: any) =>
+          c.id === editingCustomer.id ? { ...c, ...editingCustomer } : c
+        );
+        setData({ ...data, customers: updated });
+        setEditingCustomer(null);
+      } else {
+        alert("Failed to update: " + (json.error || "Unknown error"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error updating customer");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
+  async function updateWasher(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!editingWasher) return;
+    setSavingEdit(true);
+
+    try {
+      const res = await fetch("/api/firebase/update-provider", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingWasher),
+      });
+      const json = await res.json();
+      if (json.ok && data) {
+        const updated = data.providers.map((w: any) =>
+          w.id === editingWasher.id ? { ...w, ...editingWasher } : w
+        );
+        setData({ ...data, providers: updated });
+        setEditingWasher(null);
+      } else {
+        alert("Failed to update: " + (json.error || "Unknown error"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error updating washer");
+    } finally {
+      setSavingEdit(false);
     }
   }
 
@@ -192,7 +254,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main content grid (larger panels) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <Panel
           title="Customers"
           subtitle={`Recent customers (${counts.customers} total)`}
@@ -220,7 +282,14 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {data?.customers?.map((c: any) => (
+                {data?.customers
+                  ?.slice()
+                  .sort((a: any, b: any) => {
+                    const dateA = a.createdAt?.seconds ? a.createdAt.seconds : new Date(a.createdAt || 0).getTime();
+                    const dateB = b.createdAt?.seconds ? b.createdAt.seconds : new Date(b.createdAt || 0).getTime();
+                    return dateB - dateA;
+                  })
+                  .map((c: any) => (
                   <tr key={c.id} className="border-t border-slate-100">
                     <td className="px-4 py-3 text-slate-700">{c.name || c.displayName || "—"}</td>
                     <td className="px-4 py-3 text-slate-700">{c.email || "—"}</td>
@@ -228,13 +297,21 @@ export default function AdminDashboard() {
                     <td className="px-4 py-3 text-slate-700">{c.plan || c.subscription?.plan || "—"}</td>
                     <td className="px-4 py-3 text-slate-700">{c.status || "Active"}</td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => deleteCustomer(c.id)}
-                        disabled={deletingId === c.id}
-                        className="rounded-lg bg-red-600 text-white px-2.5 py-1 text-xs font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                      >
-                        {deletingId === c.id ? "..." : "Delete"}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setEditingCustomer(c)}
+                          className="rounded-lg bg-blue-600 text-white px-2.5 py-1 text-xs font-medium hover:bg-blue-700 transition"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => deleteCustomer(c.id)}
+                          disabled={deletingId === c.id}
+                          className="rounded-lg bg-red-600 text-white px-2.5 py-1 text-xs font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                          {deletingId === c.id ? "..." : "Delete"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -270,7 +347,14 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {data?.providers?.map((w: any) => (
+                {data?.providers
+                  ?.slice()
+                  .sort((a: any, b: any) => {
+                    const dateA = a.createdAt?.seconds ? a.createdAt.seconds : new Date(a.createdAt || 0).getTime();
+                    const dateB = b.createdAt?.seconds ? b.createdAt.seconds : new Date(b.createdAt || 0).getTime();
+                    return dateB - dateA;
+                  })
+                  .map((w: any) => (
                   <tr key={w.id} className="border-t border-slate-100">
                     <td className="px-4 py-3 text-slate-700">{w.name || w.displayName || "—"}</td>
                     <td className="px-4 py-3 text-slate-700">{w.email || "—"}</td>
@@ -293,13 +377,21 @@ export default function AdminDashboard() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => deleteWasher(w.id)}
-                        disabled={deletingId === w.id}
-                        className="rounded-lg bg-red-600 text-white px-2.5 py-1 text-xs font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                      >
-                        {deletingId === w.id ? "..." : "Delete"}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setEditingWasher(w)}
+                          className="rounded-lg bg-blue-600 text-white px-2.5 py-1 text-xs font-medium hover:bg-blue-700 transition"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => deleteWasher(w.id)}
+                          disabled={deletingId === w.id}
+                          className="rounded-lg bg-red-600 text-white px-2.5 py-1 text-xs font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                          {deletingId === w.id ? "..." : "Delete"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -308,6 +400,162 @@ export default function AdminDashboard() {
           </div>
         </Panel>
       </div>
+
+      {/* --- Edit Customer Modal --- */}
+      {editingCustomer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl relative">
+            <h2 className="text-xl font-semibold mb-4 text-slate-900">Edit Customer</h2>
+            <form onSubmit={updateCustomer} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={editingCustomer.name || editingCustomer.displayName || ""}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, name: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={editingCustomer.email || ""}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, email: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                <input
+                  type="text"
+                  value={editingCustomer.phone || editingCustomer.phoneNumber || ""}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, phone: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Plan</label>
+                <input
+                  type="text"
+                  value={editingCustomer.plan || editingCustomer.subscription?.plan || ""}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, plan: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                <select
+                  value={editingCustomer.status || "Active"}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, status: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                  <option value="Suspended">Suspended</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setEditingCustomer(null)}
+                  className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition disabled:opacity-50"
+                >
+                  {savingEdit ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- Edit Washer Modal --- */}
+      {editingWasher && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl relative">
+            <h2 className="text-xl font-semibold mb-4 text-slate-900">Edit Washer</h2>
+            <form onSubmit={updateWasher} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={editingWasher.name || editingWasher.displayName || ""}
+                  onChange={(e) => setEditingWasher({ ...editingWasher, name: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={editingWasher.email || ""}
+                  onChange={(e) => setEditingWasher({ ...editingWasher, email: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                <input
+                  type="text"
+                  value={editingWasher.phone || editingWasher.phoneNumber || ""}
+                  onChange={(e) => setEditingWasher({ ...editingWasher, phone: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                />
+              </div>
+              <div className="flex items-center justify-between mt-4">
+                  <label className="text-sm font-medium text-slate-700">Active Status</label>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editingWasher.active || false}
+                      onChange={(e) => setEditingWasher({ ...editingWasher, active: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+              </div>
+              <div className="flex items-center justify-between mt-4">
+                  <label className="text-sm font-medium text-slate-700">Verified</label>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editingWasher.verified || false}
+                      onChange={(e) => setEditingWasher({ ...editingWasher, verified: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setEditingWasher(null)}
+                  className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition disabled:opacity-50"
+                >
+                  {savingEdit ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
