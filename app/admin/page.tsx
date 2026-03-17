@@ -221,6 +221,8 @@ export default function AdminDashboard() {
     (s: any) => s.status === "active" || s.isActive === true
   ).length;
 
+  const validCustomersCount = data?.customers?.filter((c: any) => !!subscriptionMap[c.id]).length ?? 0;
+
   // Format customer rows for table (kept for MiniTable compatibility, not used in inline render)
   const customerRows = data?.customers?.map((c: any) => {
     const sub = subscriptionMap[c.id];
@@ -261,7 +263,7 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       {/* KPI cards (larger) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard title="Total Customers" value={counts.customers} hint="All registered customers" />
+        <MetricCard title="Total Customers" value={validCustomersCount} hint="With subscriptions" />
         <MetricCard title="Total Washers" value={counts.providers} hint="All washer accounts" />
         <MetricCard title="Active Subscriptions" value={activeSubscriptions} hint="Currently active plans" />
         <MetricCard title="Pending Washers" value={pendingWashers} hint="Awaiting verification" />
@@ -271,7 +273,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 gap-6">
         <Panel
           title="Customers"
-          subtitle={`Recent customers (${counts.customers} total)`}
+          subtitle={`Recent customers (${validCustomersCount} total)`}
           actions={
             <div className="flex gap-2">
               <button className="rounded-xl border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50">
@@ -303,6 +305,7 @@ export default function AdminDashboard() {
                     const dateB = b.createdAt?.seconds ? b.createdAt.seconds : new Date(b.createdAt || 0).getTime();
                     return dateB - dateA;
                   })
+                  .filter((c: any) => !!subscriptionMap[c.id])
                   .map((c: any) => {
                     // Match subscription by customer UID (doc id)
                     const sub = subscriptionMap[c.id];
@@ -318,7 +321,7 @@ export default function AdminDashboard() {
                       {planLabel ? (
                         <div className="flex flex-col gap-0.5">
                           <span className="text-slate-800 font-medium text-sm">{planLabel}</span>
-                          {subStatus && subStatus !== "active" && (
+                          {subStatus && subStatus !== "active" && subStatus !== "pending" && (
                             <span className={[
                               "inline-flex w-fit rounded-full px-2 py-0.5 text-xs font-medium",
                               subStatus === "cancelled" ? "bg-red-50 text-red-600" :
@@ -334,7 +337,14 @@ export default function AdminDashboard() {
                         <span className="text-slate-400 text-sm">No plan</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">{c.status || "Active"}</td>
+                     <td className="px-4 py-3">
+                       <span className={[
+                         "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
+                         c.isActive === true ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500",
+                       ].join(" ")}>
+                         {c.isActive === true ? "Active" : "Inactive"}
+                       </span>
+                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <button
