@@ -8,7 +8,7 @@ export async function GET() {
     console.log("Firestore check initiated - fetching all collections");
 
     // Define collections to fetch
-    const collectionNames = ["bookings", "customers", "password_resets", "providers", "users", "washers"];
+    const collectionNames = ["bookings", "customers", "password_resets", "providers", "subscriptions", "users", "washers"];
 
     // Fetch all collections in parallel using Admin SDK
     const results: Record<string, any[]> = {};
@@ -31,6 +31,7 @@ export async function GET() {
         customers: results.customers?.length ?? 0,
         password_resets: results.password_resets?.length ?? 0,
         providers: results.providers?.length ?? 0,
+        subscriptions: results.subscriptions?.length ?? 0,
         users: results.users?.length ?? 0,
         washers: results.washers?.length ?? 0,
       },

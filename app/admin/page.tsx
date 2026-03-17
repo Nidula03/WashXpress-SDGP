@@ -8,6 +8,7 @@ interface FirestoreData {
   customers: any[];
   password_resets: any[];
   providers: any[];
+  subscriptions: any[];
   users: any[];
   washers: any[];
 }
@@ -20,6 +21,7 @@ interface ApiResponse {
     customers: number;
     password_resets: number;
     providers: number;
+    subscriptions: number;
     users: number;
     washers: number;
   };
@@ -205,19 +207,31 @@ export default function AdminDashboard() {
     (w) => w.status === "pending" || w.verified !== true
   ).length ?? 0;
 
-  // Get active subscriptions (you may need to adjust based on your data structure)
-  const activeSubscriptions = data?.customers?.filter(
-    (c) => c.subscription?.status === "active" || c.subscriptionStatus === "active"
-  ).length ?? 0;
+  // Build a lookup map: customerId → subscription document
+  // Subscriptions stored in the `subscriptions` collection with a `customerId` field
+  // matching the customer's UID (document ID in the `customers` collection).
+  const subscriptionMap: Record<string, any> = {};
+  (data?.subscriptions || []).forEach((sub: any) => {
+    const key = sub.customerId || sub.userId || sub.uid;
+    if (key) subscriptionMap[key] = sub;
+  });
 
-  // Format customer rows for table
-  const customerRows = data?.customers?.map((c) => [
-    c.name || c.displayName || "—",
-    c.email || "—",
-    c.phone || c.phoneNumber || "—",
-    c.plan || c.subscription?.plan || "—",
-    c.status || "Active",
-  ]) || [["—", "—", "—", "—", "—"]];
+  // Active subscriptions: count from subscriptions collection where status === "active"
+  const activeSubscriptions = (data?.subscriptions || []).filter(
+    (s: any) => s.status === "active" || s.isActive === true
+  ).length;
+
+  // Format customer rows for table (kept for MiniTable compatibility, not used in inline render)
+  const customerRows = data?.customers?.map((c: any) => {
+    const sub = subscriptionMap[c.id];
+    return [
+      c.name || c.displayName || "—",
+      c.email || "—",
+      c.phone || c.phoneNumber || "—",
+      sub?.planName || sub?.planId || sub?.plan || c.plan || c.subscription?.plan || "—",
+      c.status || "Active",
+    ];
+  }) || [["—", "—", "—", "—", "—"]];
 
   // Format washer rows for table (from providers collection)
   const washerRows = data?.providers?.map((w) => [
@@ -289,12 +303,37 @@ export default function AdminDashboard() {
                     const dateB = b.createdAt?.seconds ? b.createdAt.seconds : new Date(b.createdAt || 0).getTime();
                     return dateB - dateA;
                   })
-                  .map((c: any) => (
+                  .map((c: any) => {
+                    // Match subscription by customer UID (doc id)
+                    const sub = subscriptionMap[c.id];
+                    const planLabel = sub?.planName || sub?.planId || sub?.plan ||
+                      c.plan || c.subscription?.plan || null;
+                    const subStatus = sub?.status ?? null;
+                    return (
                   <tr key={c.id} className="border-t border-slate-100">
                     <td className="px-4 py-3 text-slate-700">{c.name || c.displayName || "—"}</td>
                     <td className="px-4 py-3 text-slate-700">{c.email || "—"}</td>
                     <td className="px-4 py-3 text-slate-700">{c.phone || c.phoneNumber || "—"}</td>
-                    <td className="px-4 py-3 text-slate-700">{c.plan || c.subscription?.plan || "—"}</td>
+                    <td className="px-4 py-3">
+                      {planLabel ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-slate-800 font-medium text-sm">{planLabel}</span>
+                          {subStatus && subStatus !== "active" && (
+                            <span className={[
+                              "inline-flex w-fit rounded-full px-2 py-0.5 text-xs font-medium",
+                              subStatus === "cancelled" ? "bg-red-50 text-red-600" :
+                              subStatus === "paused"    ? "bg-amber-50 text-amber-700" :
+                              subStatus === "expired"   ? "bg-slate-100 text-slate-500" :
+                              "bg-slate-100 text-slate-600",
+                            ].join(" ")}>
+                              {subStatus}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 text-sm">No plan</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-slate-700">{c.status || "Active"}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
@@ -314,7 +353,8 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                );
+                  })}
               </tbody>
             </table>
           </div>
