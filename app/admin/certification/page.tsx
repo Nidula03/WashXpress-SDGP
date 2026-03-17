@@ -25,6 +25,7 @@ interface Provider {
     completedEvaluations: number;
     status: string;
     assignedMentors: string[];
+    shadowJobs?: string[];
   };
   trainingCenter?: {
     centerId: string | null;
@@ -40,35 +41,61 @@ interface Provider {
   };
 }
 
-type TabType = "pending" | "field" | "training" | "certified" | "all";
+interface Booking {
+  id: string;
+  customerId?: string;
+  customerName?: string;
+  certifiedWasherId?: string;
+  certifiedWasherName?: string;
+  providerId?: string;
+  providerName?: string;
+  serviceType?: string;
+  serviceName?: string;
+  scheduledDate?: string;
+  date?: string;
+  status?: string;
+  location?: string;
+  traineeAssignment?: {
+    traineeId: string;
+    traineeName: string;
+    status: string;
+    assignedAt: string;
+    adminNotes?: string | null;
+  };
+}
+
+type TabType = "pending" | "field" | "training" | "certified" | "shadow" | "all";
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function CertificationPage() {
   const [providers, setProviders] = useState<Provider[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("pending");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Provider | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [adminNotes, setAdminNotes] = useState("");
   const [assignInput, setAssignInput] = useState("");
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchProviders();
+    fetchData();
   }, []);
 
-  async function fetchProviders() {
+  async function fetchData() {
     setLoading(true);
     try {
       const res = await fetch("/api/firebase/firestore-check");
       const json = await res.json();
       if (json.ok) {
         setProviders(json.data.providers || []);
+        setBookings(json.data.bookings || []);
       } else {
-        setError("Failed to fetch providers");
+        setError("Failed to fetch data");
       }
     } catch {
       setError("Error connecting to database");
@@ -91,13 +118,7 @@ export default function CertificationPage() {
         setProviders((prev) =>
           prev.map((p) =>
             p.id === id
-              ? {
-                  ...p,
-                  certificationStatus: "certified",
-                  washerStatus: "available",
-                  isActive: true,
-                  isVerified: true,
-                }
+              ? { ...p, certificationStatus: "certified", washerStatus: "available", isActive: true, isVerified: true }
               : p
           )
         );
@@ -122,9 +143,7 @@ export default function CertificationPage() {
       if (json.ok) {
         showSuccess("Application rejected");
         setProviders((prev) =>
-          prev.map((p) =>
-            p.id === id ? { ...p, certificationStatus: "rejected" } : p
-          )
+          prev.map((p) => (p.id === id ? { ...p, certificationStatus: "rejected" } : p))
         );
         setSelected(null);
       } else {
@@ -150,15 +169,7 @@ export default function CertificationPage() {
         setProviders((prev) =>
           prev.map((p) =>
             p.id === id
-              ? {
-                  ...p,
-                  certificationStatus: "in_training",
-                  trainingCenter: {
-                    ...p.trainingCenter!,
-                    centerName: assignInput.trim(),
-                    status: "assigned",
-                  },
-                }
+              ? { ...p, certificationStatus: "in_training", trainingCenter: { ...p.trainingCenter!, centerName: assignInput.trim(), status: "assigned" } }
               : p
           )
         );
@@ -192,10 +203,7 @@ export default function CertificationPage() {
                   certificationStatus: "in_training",
                   fieldCertification: {
                     ...p.fieldCertification!,
-                    assignedMentors: [
-                      ...(p.fieldCertification?.assignedMentors || []),
-                      assignInput.trim(),
-                    ],
+                    assignedMentors: [...(p.fieldCertification?.assignedMentors || []), assignInput.trim()],
                     status: "mentor_assigned",
                   },
                 }
@@ -204,6 +212,63 @@ export default function CertificationPage() {
         );
         setSelected(null);
         setAssignInput("");
+      } else {
+        alert("Failed: " + (json.error || "Unknown error"));
+      }
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleAssignTrainee(
+    bookingId: string,
+    traineeId: string,
+    traineeName: string,
+    notes: string
+  ) {
+    setActionLoading(true);
+    try {
+      const res = await fetch("/api/firebase/assign-trainee", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId, traineeId, traineeName, adminNotes: notes }),
+      });
+      const json = await res.json();
+      if (json.ok) {
+        showSuccess("Trainee assigned to job ✓");
+        setBookings((prev) =>
+          prev.map((b) =>
+            b.id === bookingId
+              ? {
+                  ...b,
+                  traineeAssignment: {
+                    traineeId,
+                    traineeName,
+                    status: "shadowing",
+                    assignedAt: new Date().toISOString(),
+                    adminNotes: notes || null,
+                  },
+                }
+              : b
+          )
+        );
+        // Update the provider's completed evaluations locally
+        setProviders((prev) =>
+          prev.map((p) =>
+            p.id === traineeId
+              ? {
+                  ...p,
+                  certificationStatus: "in_training",
+                  fieldCertification: {
+                    ...p.fieldCertification!,
+                    completedEvaluations: (p.fieldCertification?.completedEvaluations || 0) + 1,
+                    shadowJobs: [...(p.fieldCertification?.shadowJobs || []), bookingId],
+                  },
+                }
+              : p
+          )
+        );
+        setSelectedBooking(null);
       } else {
         alert("Failed: " + (json.error || "Unknown error"));
       }
@@ -236,6 +301,24 @@ export default function CertificationPage() {
     return matchTab && matchSearch;
   });
 
+  // Bookings that have a certified washer (any status except cancelled)
+  const activeBookings = bookings.filter(
+    (b) =>
+      (b.certifiedWasherId || b.providerId) &&
+      b.status !== "cancelled" &&
+      b.status !== "completed"
+  );
+
+  const filteredBookings = activeBookings.filter((b) => {
+    const q = search.toLowerCase();
+    return (
+      !q ||
+      (b.customerName || "").toLowerCase().includes(q) ||
+      (b.certifiedWasherName || b.providerName || "").toLowerCase().includes(q) ||
+      (b.serviceType || b.serviceName || "").toLowerCase().includes(q)
+    );
+  });
+
   // ─── Stats ──────────────────────────────────────────────────────────────────
 
   const stats = {
@@ -244,7 +327,13 @@ export default function CertificationPage() {
     training: providers.filter((p) => p.certificationPath === "training_center").length,
     certified: providers.filter((p) => p.certificationStatus === "certified").length,
     rejected: providers.filter((p) => p.certificationStatus === "rejected").length,
+    shadow: activeBookings.length,
   };
+
+  // Uncertified providers available to shadow jobs
+  const uncertifiedProviders = providers.filter(
+    (p) => p.certificationStatus !== "certified"
+  );
 
   // ─── Render ─────────────────────────────────────────────────────────────────
 
@@ -281,16 +370,17 @@ export default function CertificationPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight">Washer Certification</h1>
-          <p className="text-slate-500 mt-1">Review applications, assign mentors and training centers</p>
+          <p className="text-slate-500 mt-1">Review applications, assign mentors, training centers, and job shadow opportunities</p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <StatCard label="Pending Review" value={stats.pending} color="amber" />
-          <StatCard label="Field Certification" value={stats.field} color="blue" />
+          <StatCard label="Field Cert." value={stats.field} color="blue" />
           <StatCard label="Training Center" value={stats.training} color="purple" />
           <StatCard label="Certified" value={stats.certified} color="green" />
           <StatCard label="Rejected" value={stats.rejected} color="red" />
+          <StatCard label="Active Jobs" value={stats.shadow} color="teal" />
         </div>
 
         {/* Tabs + Search */}
@@ -301,6 +391,7 @@ export default function CertificationPage() {
               { key: "field", label: "Field Cert." },
               { key: "training", label: "Training" },
               { key: "certified", label: "Certified" },
+              { key: "shadow", label: "Job Shadow" },
               { key: "all", label: "All" },
             ] as { key: TabType; label: string }[]).map((t) => (
               <button
@@ -309,7 +400,9 @@ export default function CertificationPage() {
                 className={[
                   "rounded-full px-4 py-2 text-sm border transition",
                   activeTab === t.key
-                    ? "bg-slate-900 text-white border-slate-900"
+                    ? t.key === "shadow"
+                      ? "bg-teal-600 text-white border-teal-600"
+                      : "bg-slate-900 text-white border-slate-900"
                     : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50",
                 ].join(" ")}
               >
@@ -319,83 +412,202 @@ export default function CertificationPage() {
                     {stats.pending}
                   </span>
                 )}
+                {t.key === "shadow" && stats.shadow > 0 && (
+                  <span className="ml-2 rounded-full bg-teal-500 text-white text-xs px-1.5 py-0.5">
+                    {stats.shadow}
+                  </span>
+                )}
               </button>
             ))}
           </div>
           <input
             type="text"
-            placeholder="Search by name or email..."
+            placeholder={activeTab === "shadow" ? "Search by customer, washer, service..." : "Search by name or email..."}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full sm:w-72 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
           />
         </div>
 
-        {/* Table */}
-        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-100">
-                <tr className="text-left text-slate-500">
-                  <th className="px-6 py-4 font-medium">Washer</th>
-                  <th className="px-6 py-4 font-medium">Path</th>
-                  <th className="px-6 py-4 font-medium">Cert. Status</th>
-                  <th className="px-6 py-4 font-medium">Progress</th>
-                  <th className="px-6 py-4 font-medium">Applied</th>
-                  <th className="px-6 py-4 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-16 text-center text-slate-400">
-                      No washers found in this category
-                    </td>
-                  </tr>
-                ) : (
-                  filtered.map((p) => (
-                    <tr
-                      key={p.id}
-                      className="border-t border-slate-100 hover:bg-slate-50/50 transition"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="font-medium text-slate-900">{p.displayName || "—"}</div>
-                        <div className="text-xs text-slate-400 mt-0.5">{p.email || "—"}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <PathBadge path={p.certificationPath} />
-                      </td>
-                      <td className="px-6 py-4">
-                        <CertStatusBadge status={p.certificationStatus} />
-                      </td>
-                      <td className="px-6 py-4">
-                        <ProgressCell provider={p} />
-                      </td>
-                      <td className="px-6 py-4 text-slate-500 text-xs">
-                        {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "—"}
-                      </td>
-                      <td className="px-6 py-4">
-                        <button
-                          onClick={() => { setSelected(p); setAdminNotes(""); setAssignInput(""); }}
-                          className="rounded-lg bg-[#0ca6e8] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#0990cc] transition"
-                        >
-                          Review
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        {/* ── Job Shadow Tab ── */}
+        {activeTab === "shadow" ? (
+          <div>
+            {/* Info banner */}
+            <div className="rounded-xl border border-teal-200 bg-teal-50 px-5 py-4 mb-6 flex items-start gap-3">
+              <span className="text-teal-500 text-xl mt-0.5">🎓</span>
+              <div>
+                <p className="text-sm font-semibold text-teal-800">Job Shadow Training</p>
+                <p className="text-sm text-teal-700 mt-0.5">
+                  Assign uncertified washers to active jobs already taken by certified washers.
+                  The trainee will accompany and learn on the job — each shadow counts toward their field certification evaluations.
+                </p>
+              </div>
+            </div>
 
-        <div className="mt-4 text-sm text-slate-400">
-          Showing {filtered.length} of {providers.length} providers
-        </div>
+            <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-100">
+                    <tr className="text-left text-slate-500">
+                      <th className="px-6 py-4 font-medium">Scheduled Date</th>
+                      <th className="px-6 py-4 font-medium">Customer</th>
+                      <th className="px-6 py-4 font-medium">Certified Washer</th>
+                      <th className="px-6 py-4 font-medium">Service</th>
+                      <th className="px-6 py-4 font-medium">Status</th>
+                      <th className="px-6 py-4 font-medium">Trainee</th>
+                      <th className="px-6 py-4 font-medium">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredBookings.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-6 py-16 text-center">
+                          <div className="flex flex-col items-center gap-2 text-slate-400">
+                            <span className="text-3xl">📋</span>
+                            <p className="text-sm">No active bookings with assigned washers found</p>
+                            <p className="text-xs">Bookings will appear here once washers are assigned in the app</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredBookings.map((b) => (
+                        <tr
+                          key={b.id}
+                          className="border-t border-slate-100 hover:bg-slate-50/50 transition"
+                        >
+                          <td className="px-6 py-4 text-slate-700">
+                            {b.scheduledDate || b.date
+                              ? new Date(b.scheduledDate || b.date!).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })
+                              : "—"}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="font-medium text-slate-900">{b.customerName || "—"}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <span className="h-6 w-6 rounded-full bg-green-100 text-green-700 text-xs flex items-center justify-center font-bold">
+                                ✓
+                              </span>
+                              <span className="text-slate-700 font-medium">
+                                {b.certifiedWasherName || b.providerName || (b.certifiedWasherId || b.providerId || "—")}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-slate-600">
+                            {b.serviceType || b.serviceName || "—"}
+                          </td>
+                          <td className="px-6 py-4">
+                            <BookingStatusBadge status={b.status} />
+                          </td>
+                          <td className="px-6 py-4">
+                            {b.traineeAssignment ? (
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 text-teal-700 px-2.5 py-1 text-xs font-medium">
+                                  🎓 {b.traineeAssignment.traineeName}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-slate-400">Not assigned</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <button
+                              onClick={() => { setSelectedBooking(b); setAdminNotes(""); }}
+                              className={[
+                                "rounded-lg px-3 py-1.5 text-xs font-medium transition",
+                                b.traineeAssignment
+                                  ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                  : "bg-teal-600 text-white hover:bg-teal-700",
+                              ].join(" ")}
+                            >
+                              {b.traineeAssignment ? "Reassign Trainee" : "Assign Trainee"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="mt-4 text-sm text-slate-400">
+              Showing {filteredBookings.length} of {activeBookings.length} active jobs
+            </div>
+          </div>
+        ) : (
+          /* ── Original Provider Table ── */
+          <div>
+            <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-100">
+                    <tr className="text-left text-slate-500">
+                      <th className="px-6 py-4 font-medium">Washer</th>
+                      <th className="px-6 py-4 font-medium">Path</th>
+                      <th className="px-6 py-4 font-medium">Cert. Status</th>
+                      <th className="px-6 py-4 font-medium">Progress</th>
+                      <th className="px-6 py-4 font-medium">Applied</th>
+                      <th className="px-6 py-4 font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-16 text-center text-slate-400">
+                          No washers found in this category
+                        </td>
+                      </tr>
+                    ) : (
+                      filtered.map((p) => (
+                        <tr
+                          key={p.id}
+                          className="border-t border-slate-100 hover:bg-slate-50/50 transition"
+                        >
+                          <td className="px-6 py-4">
+                            <div className="font-medium text-slate-900">{p.displayName || "—"}</div>
+                            <div className="text-xs text-slate-400 mt-0.5">{p.email || "—"}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <PathBadge path={p.certificationPath} />
+                          </td>
+                          <td className="px-6 py-4">
+                            <CertStatusBadge status={p.certificationStatus} />
+                          </td>
+                          <td className="px-6 py-4">
+                            <ProgressCell provider={p} />
+                          </td>
+                          <td className="px-6 py-4 text-slate-500 text-xs">
+                            {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "—"}
+                          </td>
+                          <td className="px-6 py-4">
+                            <button
+                              onClick={() => { setSelected(p); setAdminNotes(""); setAssignInput(""); }}
+                              className="rounded-lg bg-[#0ca6e8] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#0990cc] transition"
+                            >
+                              Review
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="mt-4 text-sm text-slate-400">
+              Showing {filtered.length} of {providers.length} providers
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Detail Modal */}
+      {/* Provider Review Modal */}
       {selected && (
         <ReviewModal
           provider={selected}
@@ -411,6 +623,221 @@ export default function CertificationPage() {
           onAssignMentor={() => handleAssignMentor(selected.id)}
         />
       )}
+
+      {/* Assign Trainee Modal */}
+      {selectedBooking && (
+        <AssignTraineeModal
+          booking={selectedBooking}
+          uncertifiedProviders={uncertifiedProviders}
+          actionLoading={actionLoading}
+          onClose={() => setSelectedBooking(null)}
+          onAssign={handleAssignTrainee}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Assign Trainee Modal ──────────────────────────────────────────────────────
+
+function AssignTraineeModal({
+  booking,
+  uncertifiedProviders,
+  actionLoading,
+  onClose,
+  onAssign,
+}: {
+  booking: Booking;
+  uncertifiedProviders: Provider[];
+  actionLoading: boolean;
+  onClose: () => void;
+  onAssign: (bookingId: string, traineeId: string, traineeName: string, notes: string) => void;
+}) {
+  const [traineeSearch, setTraineeSearch] = useState("");
+  const [selectedTrainee, setSelectedTrainee] = useState<Provider | null>(null);
+  const [notes, setNotes] = useState("");
+
+  const filteredTrainees = uncertifiedProviders.filter((p) => {
+    const q = traineeSearch.toLowerCase();
+    return (
+      !q ||
+      (p.displayName || "").toLowerCase().includes(q) ||
+      (p.email || "").toLowerCase().includes(q)
+    );
+  });
+
+  const scheduledDate = booking.scheduledDate || booking.date;
+  const certifiedWasher = booking.certifiedWasherName || booking.providerName ||
+    booking.certifiedWasherId || booking.providerId || "—";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
+
+        {/* Modal Header */}
+        <div
+          className="flex items-center justify-between px-6 py-5 border-b border-slate-100"
+          style={{ backgroundColor: "#0d1629" }}
+        >
+          <div>
+            <h2 className="text-lg font-semibold text-white">Assign Trainee to Job</h2>
+            <p className="text-slate-400 text-sm mt-0.5">Shadow learning opportunity</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-white transition text-xl font-light"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
+
+          {/* Job Details */}
+          <div>
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Job Details</h3>
+            <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-xs text-slate-400 block">Scheduled Date</span>
+                  <p className="font-medium text-slate-800 mt-0.5">
+                    {scheduledDate
+                      ? new Date(scheduledDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })
+                      : "—"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-400 block">Customer</span>
+                  <p className="font-medium text-slate-800 mt-0.5">{booking.customerName || "—"}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-400 block">Service</span>
+                  <p className="font-medium text-slate-800 mt-0.5">{booking.serviceType || booking.serviceName || "—"}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-400 block">Status</span>
+                  <p className="font-medium text-slate-800 mt-0.5 capitalize">{booking.status || "—"}</p>
+                </div>
+              </div>
+              {/* Certified Washer highlight */}
+              <div className="flex items-center gap-3 rounded-lg bg-green-50 border border-green-200 px-3 py-2.5">
+                <span className="h-7 w-7 rounded-full bg-green-600 text-white text-xs flex items-center justify-center font-bold flex-shrink-0">✓</span>
+                <div>
+                  <span className="text-xs text-green-600 font-semibold block">Certified Washer (Lead)</span>
+                  <span className="text-sm font-medium text-green-900">{certifiedWasher}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Current Trainee (if already assigned) */}
+          {booking.traineeAssignment && (
+            <div className="rounded-xl bg-teal-50 border border-teal-200 px-4 py-3">
+              <p className="text-xs font-semibold text-teal-700 mb-1">Currently Assigned Trainee</p>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-teal-900">🎓 {booking.traineeAssignment.traineeName}</span>
+                <span className="rounded-full bg-teal-200 text-teal-800 text-xs px-2 py-0.5">{booking.traineeAssignment.status}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Select Trainee */}
+          <div>
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Select Trainee Washer</h3>
+            <input
+              type="text"
+              placeholder="Search uncertified washers..."
+              value={traineeSearch}
+              onChange={(e) => setTraineeSearch(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 mb-3"
+            />
+            <div className="max-h-44 overflow-y-auto rounded-xl border border-slate-200 divide-y divide-slate-100">
+              {filteredTrainees.length === 0 ? (
+                <div className="px-4 py-6 text-center text-sm text-slate-400">
+                  No uncertified washers found
+                </div>
+              ) : (
+                filteredTrainees.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setSelectedTrainee(p)}
+                    className={[
+                      "w-full text-left px-4 py-3 flex items-center gap-3 transition hover:bg-slate-50",
+                      selectedTrainee?.id === p.id ? "bg-teal-50" : "",
+                    ].join(" ")}
+                  >
+                    <div
+                      className={[
+                        "h-5 w-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition",
+                        selectedTrainee?.id === p.id
+                          ? "border-teal-600 bg-teal-600"
+                          : "border-slate-300",
+                      ].join(" ")}
+                    >
+                      {selectedTrainee?.id === p.id && (
+                        <span className="text-white text-xs">✓</span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-medium text-slate-900 text-sm truncate">
+                        {p.displayName || "No Name"}
+                      </div>
+                      <div className="text-xs text-slate-400 truncate">{p.email || "—"}</div>
+                    </div>
+                    <div className="ml-auto flex-shrink-0">
+                      <CertStatusBadge status={p.certificationStatus} />
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Training Notes */}
+          <div>
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Training Notes</h3>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add training objectives, areas to focus on, or special instructions..."
+              rows={3}
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 resize-none"
+            />
+          </div>
+        </div>
+
+        {/* Modal Footer */}
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-3">
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-slate-200 bg-white text-slate-600 px-5 py-2.5 text-sm font-medium hover:bg-slate-50 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              if (!selectedTrainee) return alert("Please select a trainee washer");
+              onAssign(
+                booking.id,
+                selectedTrainee.id,
+                selectedTrainee.displayName || "Unknown",
+                notes
+              );
+            }}
+            disabled={actionLoading || !selectedTrainee}
+            className="rounded-xl bg-teal-600 text-white px-5 py-2.5 text-sm font-medium hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+          >
+            {actionLoading ? (
+              <>
+                <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                Assigning...
+              </>
+            ) : (
+              <>🎓 Assign Trainee</>
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -444,8 +871,6 @@ function ReviewModal({
 }) {
   const isField = provider.certificationPath === "field_certification";
   const isTraining = provider.certificationPath === "training_center";
-  const isPending = provider.certificationStatus === "pending_certification";
-  const isInTraining = provider.certificationStatus === "in_training";
   const isCertified = provider.certificationStatus === "certified";
 
   return (
@@ -502,6 +927,9 @@ function ReviewModal({
                 <Detail label="Field Status" value={provider.fieldCertification.status} />
                 {provider.fieldCertification.assignedMentors.length > 0 && (
                   <Detail label="Assigned Mentors" value={provider.fieldCertification.assignedMentors.join(", ")} />
+                )}
+                {(provider.fieldCertification.shadowJobs?.length ?? 0) > 0 && (
+                  <Detail label="Shadow Jobs Completed" value={String(provider.fieldCertification.shadowJobs?.length ?? 0)} />
                 )}
               </div>
             </Section>
@@ -640,6 +1068,7 @@ function StatCard({ label, value, color }: { label: string; value: number; color
     purple: "text-purple-600",
     green: "text-green-600",
     red: "text-red-500",
+    teal: "text-teal-600",
   };
   return (
     <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-5">
@@ -673,6 +1102,21 @@ function CertStatusBadge({ status }: { status?: string }) {
     certified: { label: "Certified", cls: "bg-green-50 text-green-700" },
     rejected: { label: "Rejected", cls: "bg-red-50 text-red-600" },
     uncertified: { label: "Uncertified", cls: "bg-slate-100 text-slate-600" },
+  };
+  const s = map[status || ""] || { label: status || "—", cls: "bg-slate-100 text-slate-600" };
+  return (
+    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${s.cls}`}>
+      {s.label}
+    </span>
+  );
+}
+
+function BookingStatusBadge({ status }: { status?: string }) {
+  const map: Record<string, { label: string; cls: string }> = {
+    assigned: { label: "Assigned", cls: "bg-blue-50 text-blue-700" },
+    pending: { label: "Pending", cls: "bg-amber-50 text-amber-700" },
+    in_progress: { label: "In Progress", cls: "bg-teal-50 text-teal-700" },
+    confirmed: { label: "Confirmed", cls: "bg-green-50 text-green-700" },
   };
   const s = map[status || ""] || { label: status || "—", cls: "bg-slate-100 text-slate-600" };
   return (
