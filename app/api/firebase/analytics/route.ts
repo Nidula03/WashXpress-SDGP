@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
     // ── Customer & washer counts ──────────────────────────────────────────────
     const [customersSnap, washersSnap, subscriptionsSnap] = await Promise.all([
       adminDb.collection("customers").get(), // getting all to filter locally as count() API has limitations
-      adminDb.collection("providers").where("isActive", "==", true).count().get(),
+      adminDb.collection("providers").count().get(),
       adminDb.collection("subscriptions").get(),
     ]);
 
