@@ -340,9 +340,9 @@ export default function AdminDashboard() {
                      <td className="px-4 py-3">
                        <span className={[
                          "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
-                         c.isActive === true ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500",
+                         (planLabel || c.isActive === true) ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500",
                        ].join(" ")}>
-                         {c.isActive === true ? "Active" : "Inactive"}
+                         {(planLabel || c.isActive === true) ? "Active" : "Inactive"}
                        </span>
                      </td>
                     <td className="px-4 py-3">

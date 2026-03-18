@@ -72,10 +72,24 @@ export async function GET(req: NextRequest) {
       .slice(0, 5);
 
     // ── Customer & washer counts ──────────────────────────────────────────────
-    const [customersSnap, washersSnap] = await Promise.all([
-      adminDb.collection("customers").count().get(),
+    const [customersSnap, washersSnap, subscriptionsSnap] = await Promise.all([
+      adminDb.collection("customers").get(), // getting all to filter locally as count() API has limitations
       adminDb.collection("providers").where("isActive", "==", true).count().get(),
+      adminDb.collection("subscriptions").get(),
     ]);
+
+    const customers = customersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const subscriptions = subscriptionsSnap.docs.map(doc => doc.data() as any);
+    
+    // Build a lookup map: customerId → subscription document
+    const subscriptionMap: Record<string, any> = {};
+    subscriptions.forEach((sub: any) => {
+      const key = sub.customerId || sub.userId || sub.uid;
+      if (key) subscriptionMap[key] = sub;
+    });
+
+    // Valid customers are those with a subscription, matching logic on AdminDashboard
+    const validCustomersCount = customers.filter((c: any) => !!subscriptionMap[c.id]).length;
 
     return NextResponse.json({
       totalRevenue: Math.round(totalRevenue),
@@ -84,7 +98,7 @@ export async function GET(req: NextRequest) {
       cancelledBookings,
       pendingBookings,
       paidBookings,
-      totalCustomers: customersSnap.data().count,
+      totalCustomers: validCustomersCount,
       totalWashers: washersSnap.data().count,
       revenueByDay,
       topServices,
