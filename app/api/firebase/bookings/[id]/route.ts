@@ -4,10 +4,10 @@ import { adminDb } from "@/lib/firebase-admin";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const bookingDoc = await adminDb.collection("bookings").doc(id).get();
 
     if (!bookingDoc.exists) {

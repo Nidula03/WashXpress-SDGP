@@ -5,10 +5,10 @@ import { FieldValue } from "firebase-admin/firestore";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const { status, adminNotes } = body;
 
