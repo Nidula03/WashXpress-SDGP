@@ -274,16 +274,6 @@ export default function AdminDashboard() {
         <Panel
           title="Customers"
           subtitle={`Recent customers (${validCustomersCount} total)`}
-          actions={
-            <div className="flex gap-2">
-              <button className="rounded-xl border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50">
-                View all
-              </button>
-              <button className="rounded-xl bg-slate-900 text-white px-3 py-2 text-sm hover:bg-black">
-                Add
-              </button>
-            </div>
-          }
         >
           <div className="overflow-x-auto rounded-2xl border border-slate-100">
             <table className="w-full text-sm">
@@ -373,16 +363,6 @@ export default function AdminDashboard() {
         <Panel
           title="Washers"
           subtitle={`Recent washers (${counts.providers} total)`}
-          actions={
-            <div className="flex gap-2">
-              <button className="rounded-xl border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50">
-                View all
-              </button>
-              <button className="rounded-xl bg-slate-900 text-white px-3 py-2 text-sm hover:bg-black">
-                Add
-              </button>
-            </div>
-          }
         >
           <div className="overflow-x-auto rounded-2xl border border-slate-100">
             <table className="w-full text-sm">
