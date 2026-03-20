@@ -20,18 +20,27 @@ export async function GET(req: NextRequest) {
 
     const bookings = bookingsSnap.docs.map((d) => ({ id: d.id, ...d.data() as any }));
 
+    // ── Fetch services to map prices ──────────────────────────────────────────
+    const servicesSnap = await adminDb.collection("services").get();
+    const servicePricesMap: Record<string, number> = {};
+    const serviceNamesMap: Record<string, string> = {};
+    servicesSnap.docs.forEach((doc) => {
+      const data = doc.data();
+      servicePricesMap[doc.id] = data.price || 0;
+      serviceNamesMap[doc.id] = data.name || doc.id;
+    });
+
     // ── Booking status counts ────────────────────────────────────────────────
     const completedBookings = bookings.filter((b) => b.status === "completed").length;
     const cancelledBookings = bookings.filter((b) => b.status === "cancelled").length;
     const pendingBookings = bookings.filter((b) =>
       ["pending", "confirmed", "in_progress"].includes(b.status)
     ).length;
-    const paidBookings = bookings.filter((b) => b.paymentStatus === "paid").length;
+    const paidBookings = bookings.filter((b) => b.paymentStatus === "paid" || b.status !== "cancelled").length;
 
     // ── Revenue ──────────────────────────────────────────────────────────────
     const totalRevenue = bookings
-      .filter((b) => b.paymentStatus === "paid")
-      .reduce((sum: number, b: any) => sum + (b.paymentAmount || b.totalPrice || 0), 0);
+      .reduce((sum: number, b: any) => sum + (b.paymentAmount || b.totalPrice || b.price || b.service?.price || servicePricesMap[b.serviceId] || 0), 0);
 
     // ── Revenue by day ────────────────────────────────────────────────────────
     const revenueByDayMap: Record<string, { revenue: number; bookings: number }> = {};
@@ -46,9 +55,7 @@ export async function GET(req: NextRequest) {
       const date = b.scheduledDate;
       if (revenueByDayMap[date]) {
         revenueByDayMap[date].bookings += 1;
-        if (b.paymentStatus === "paid") {
-          revenueByDayMap[date].revenue += b.paymentAmount || b.totalPrice || 0;
-        }
+        revenueByDayMap[date].revenue += b.paymentAmount || b.totalPrice || b.price || b.service?.price || servicePricesMap[b.serviceId] || 0;
       }
     }
 
@@ -60,12 +67,10 @@ export async function GET(req: NextRequest) {
     // ── Top services ──────────────────────────────────────────────────────────
     const serviceMap: Record<string, { name: string; count: number; revenue: number }> = {};
     for (const b of bookings) {
-      const name = b.service?.name || b.serviceId || "Unknown";
+      const name = b.service?.name || serviceNamesMap[b.serviceId] || b.serviceId || "Unknown";
       if (!serviceMap[name]) serviceMap[name] = { name, count: 0, revenue: 0 };
       serviceMap[name].count += 1;
-      if (b.paymentStatus === "paid") {
-        serviceMap[name].revenue += b.paymentAmount || b.totalPrice || 0;
-      }
+      serviceMap[name].revenue += b.paymentAmount || b.totalPrice || b.price || b.service?.price || servicePricesMap[b.serviceId] || 0;
     }
     const topServices = Object.values(serviceMap)
       .sort((a, b) => b.count - a.count)
