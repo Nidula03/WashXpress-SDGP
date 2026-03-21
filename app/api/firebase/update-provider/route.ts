@@ -6,7 +6,7 @@ import { adminDb } from "@/lib/firebase-admin";
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { id, name, displayName, email, phone, active, verified } = body;
+        const { id, name, displayName, email, phone, phoneNumber, active, verified } = body;
 
         if (!id) {
             return NextResponse.json({ ok: false, error: "Missing washer id" }, { status: 400 });
@@ -18,6 +18,7 @@ export async function POST(request: Request) {
             ...(displayName !== undefined && { displayName }),
             ...(email !== undefined && { email }),
             ...(phone !== undefined && { phone }),
+            ...(phoneNumber !== undefined && { phoneNumber }),
             ...(active !== undefined && { active }),
             ...(verified !== undefined && { verified }),
             updatedAt: new Date()
