@@ -30,12 +30,12 @@ function StatCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 flex items-start gap-4 shadow-sm">
+    <div className="bg-white rounded-xl p-5 flex items-start gap-4 shadow-sm" style={{ border: "1px solid rgba(181,154,93,0.3)" }}>
       <div className={`p-3 rounded-lg ${color}`}>{icon}</div>
       <div>
-        <p className="text-sm text-slate-500 font-medium">{title}</p>
-        <p className="text-2xl font-bold text-slate-800 mt-0.5">{value}</p>
-        {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
+        <p className="text-sm font-medium" style={{ color: "#64748B" }}>{title}</p>
+        <p className="text-2xl font-bold mt-0.5" style={{ color: "#0F172A" }}>{value}</p>
+        {sub && <p className="text-xs mt-1" style={{ color: "#64748B" }}>{sub}</p>}
       </div>
     </div>
   );
@@ -111,8 +111,8 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Analytics</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <h1 className="text-2xl font-bold" style={{ color: "#0F172A" }}>Analytics</h1>
+          <p className="text-sm mt-0.5" style={{ color: "#64748B" }}>
             Platform performance overview
           </p>
         </div>
@@ -205,12 +205,12 @@ export default function AnalyticsPage() {
           {/* Revenue Chart + Booking Breakdown */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Revenue Chart */}
-            <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+            <div className="lg:col-span-2 bg-white rounded-xl p-5 shadow-sm" style={{ border: "1px solid rgba(181,154,93,0.3)" }}>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-slate-800">
+                <h2 className="font-semibold" style={{ color: "#0F172A" }}>
                   Revenue (Last {range} days)
                 </h2>
-                <span className="text-xs text-slate-400">Hover bars for details</span>
+                <span className="text-xs" style={{ color: "#64748B" }}>Hover bars for details</span>
               </div>
               {data.revenueByDay.length > 0 ? (
                 <>
@@ -232,8 +232,8 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Booking Status Breakdown */}
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <h2 className="font-semibold text-slate-800 mb-4">
+            <div className="bg-white rounded-xl p-5 shadow-sm" style={{ border: "1px solid rgba(181,154,93,0.3)" }}>
+              <h2 className="font-semibold mb-4" style={{ color: "#0F172A" }}>
                 Booking Status
               </h2>
               <div className="space-y-3">
@@ -288,22 +288,16 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Top Services */}
-          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-            <h2 className="font-semibold text-slate-800 mb-4">Top Services</h2>
+          <div className="bg-white rounded-xl p-5 shadow-sm" style={{ border: "1px solid rgba(181,154,93,0.3)" }}>
+            <h2 className="font-semibold mb-4" style={{ color: "#0F172A" }}>Top Services</h2>
             {data.topServices.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-100">
-                      <th className="text-left py-2 text-slate-500 font-medium">
-                        Service
-                      </th>
-                      <th className="text-right py-2 text-slate-500 font-medium">
-                        Bookings
-                      </th>
-                      <th className="text-right py-2 text-slate-500 font-medium">
-                        Revenue
-                      </th>
+                  <thead style={{ borderBottom: "1px solid #F0F4F8" }}>
+                    <tr style={{ color: "#64748B" }} className="text-left">
+                      <th className="text-left py-2 font-medium">Service</th>
+                      <th className="text-right py-2 font-medium">Bookings</th>
+                      <th className="text-right py-2 font-medium">Revenue</th>
                     </tr>
                   </thead>
                   <tbody>

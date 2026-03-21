@@ -7,7 +7,7 @@ import { UserButton } from "@clerk/nextjs";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen text-slate-900" style={{ backgroundColor: "#F0F4F8" }}>
       <div className="flex">
         {/* Main */}
         <main className="flex-1">

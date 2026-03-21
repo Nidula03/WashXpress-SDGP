@@ -158,8 +158,8 @@ export default function PricingPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Pricing Management</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Manage subscription plans, prices and service allowances</p>
+          <h1 className="text-2xl font-bold" style={{ color: "#0F172A" }}>Pricing Management</h1>
+          <p className="text-sm mt-0.5" style={{ color: "#64748B" }}>Manage subscription plans, prices and service allowances</p>
         </div>
         <button
           onClick={openNew}
@@ -177,7 +177,7 @@ export default function PricingPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {plans.map((plan) => (
-            <div key={plan.id} className={`bg-white rounded-xl border-2 overflow-hidden shadow-sm transition ${!plan.isActive ? "opacity-50" : ""}`} style={{ borderColor: plan.color }}>
+            <div key={plan.id} className={`bg-white rounded-xl border-2 overflow-hidden shadow-sm transition ${!plan.isActive ? "opacity-50" : ""}`} style={{ borderColor: plan.color, boxShadow: "0 1px 3px rgba(181,154,93,0.15)" }}>
               {/* Card Header */}
               <div className="p-5" style={{ backgroundColor: plan.color + "15" }}>
                 <div className="flex items-start justify-between">
@@ -202,7 +202,7 @@ export default function PricingPage() {
 
               {/* Allowances */}
               <div className="px-5 pt-4 pb-2">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Monthly Allowances</p>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "#64748B" }}>Monthly Allowances</p>
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { label: "Washes", val: plan.allowances?.washes ?? 0, icon: (<svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>) },
@@ -243,7 +243,7 @@ export default function PricingPage() {
         <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="p-6">
-              <h2 className="text-xl font-bold text-slate-800 mb-5">{isNew ? "New Plan" : `Edit ${editingPlan.name}`}</h2>
+              <h2 className="text-xl font-bold mb-5" style={{ color: "#0F172A" }}>{isNew ? "New Plan" : `Edit ${editingPlan.name}`}</h2>
 
               <div className="space-y-4">
                 {/* Name & Tagline */}
@@ -280,7 +280,7 @@ export default function PricingPage() {
 
                 {/* Allowances */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">Monthly Allowances</label>
+                   <label className="text-xs font-semibold uppercase tracking-wide mb-2 block" style={{ color: "#64748B" }}>Monthly Allowances</label>
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { key: "washes", label: "Washes" },

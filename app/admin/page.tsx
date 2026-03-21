@@ -275,10 +275,10 @@ export default function AdminDashboard() {
           title="Customers"
           subtitle={`Recent customers (${validCustomersCount} total)`}
         >
-          <div className="overflow-x-auto rounded-2xl border border-slate-100">
+          <div className="overflow-x-auto rounded-2xl" style={{ border: "1px solid rgba(181,154,93,0.2)" }}>
             <table className="w-full text-sm">
-              <thead className="bg-slate-50">
-                <tr className="text-left text-slate-500">
+              <thead style={{ backgroundColor: "#F0F4F8" }}>
+                <tr className="text-left" style={{ color: "#64748B" }}>
                   <th className="px-4 py-3 font-medium">Name</th>
                   <th className="px-4 py-3 font-medium">Email</th>
                   <th className="px-4 py-3 font-medium">Phone</th>
@@ -303,10 +303,10 @@ export default function AdminDashboard() {
                       c.plan || c.subscription?.plan || null;
                     const subStatus = sub?.status ?? null;
                     return (
-                  <tr key={c.id} className="border-t border-slate-100">
-                    <td className="px-4 py-3 text-slate-700">{c.name || c.displayName || "—"}</td>
-                    <td className="px-4 py-3 text-slate-700">{c.email || "—"}</td>
-                    <td className="px-4 py-3 text-slate-700">{c.phone || c.phoneNumber || "—"}</td>
+                  <tr key={c.id} style={{ borderTop: "1px solid #F0F4F8" }}>
+                    <td className="px-4 py-3" style={{ color: "#1E293B" }}>{c.name || c.displayName || "—"}</td>
+                    <td className="px-4 py-3" style={{ color: "#1E293B" }}>{c.email || "—"}</td>
+                    <td className="px-4 py-3" style={{ color: "#1E293B" }}>{c.phone || c.phoneNumber || "—"}</td>
                     <td className="px-4 py-3">
                       {planLabel ? (
                         <div className="flex flex-col gap-0.5">
@@ -364,10 +364,10 @@ export default function AdminDashboard() {
           title="Washers"
           subtitle={`Recent washers (${counts.providers} total)`}
         >
-          <div className="overflow-x-auto rounded-2xl border border-slate-100">
+          <div className="overflow-x-auto rounded-2xl" style={{ border: "1px solid rgba(181,154,93,0.2)" }}>
             <table className="w-full text-sm">
-              <thead className="bg-slate-50">
-                <tr className="text-left text-slate-500">
+              <thead style={{ backgroundColor: "#F0F4F8" }}>
+                <tr className="text-left" style={{ color: "#64748B" }}>
                   <th className="px-4 py-3 font-medium">Name</th>
                   <th className="px-4 py-3 font-medium">Email</th>
                   <th className="px-4 py-3 font-medium">Phone</th>
@@ -385,11 +385,11 @@ export default function AdminDashboard() {
                     return dateB - dateA;
                   })
                   .map((w: any) => (
-                  <tr key={w.id} className="border-t border-slate-100">
-                    <td className="px-4 py-3 text-slate-700">{w.name || w.displayName || "—"}</td>
-                    <td className="px-4 py-3 text-slate-700">{w.email || "—"}</td>
-                    <td className="px-4 py-3 text-slate-700">{w.phone || w.phoneNumber || "—"}</td>
-                    <td className="px-4 py-3 text-slate-700">{(w.active || w.verified) ? "Yes" : "No"}</td>
+                  <tr key={w.id} style={{ borderTop: "1px solid #F0F4F8" }}>
+                    <td className="px-4 py-3" style={{ color: "#1E293B" }}>{w.name || w.displayName || "—"}</td>
+                    <td className="px-4 py-3" style={{ color: "#1E293B" }}>{w.email || "—"}</td>
+                    <td className="px-4 py-3" style={{ color: "#1E293B" }}>{w.phone || w.phoneNumber || "—"}</td>
+                    <td className="px-4 py-3" style={{ color: "#1E293B" }}>{(w.active || w.verified) ? "Yes" : "No"}</td>
                     <td className="px-4 py-3">
                       {w.verified ? (
                         <span className="inline-flex items-center rounded-full bg-blue-50 text-blue-700 px-2.5 py-1 text-xs font-medium">✓ Verified</span>
@@ -602,10 +602,10 @@ function MetricCard({
   hint?: string;
 }) {
   return (
-    <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-6 min-h-32 flex flex-col justify-center">
-      <div className="text-base text-slate-600 font-medium">{title}</div>
-      <div className="mt-2 text-4xl font-semibold tracking-tight">{value}</div>
-      {hint ? <div className="mt-2 text-sm text-slate-400">{hint}</div> : null}
+    <div className="rounded-2xl bg-white shadow-sm p-6 min-h-32 flex flex-col justify-center" style={{ border: "1px solid rgba(181,154,93,0.3)", borderLeft: "4px solid #B59A5D" }}>
+      <div className="text-sm font-medium" style={{ color: "#64748B" }}>{title}</div>
+      <div className="mt-2 text-4xl font-semibold tracking-tight" style={{ color: "#0F172A" }}>{value}</div>
+      {hint ? <div className="mt-2 text-xs" style={{ color: "#64748B" }}>{hint}</div> : null}
     </div>
   );
 }
@@ -622,11 +622,11 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl bg-white border border-slate-200 shadow-sm min-h-72">
-      <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-100">
+    <div className="rounded-2xl bg-white shadow-sm min-h-72" style={{ border: "1px solid rgba(181,154,93,0.3)" }}>
+      <div className="flex items-start justify-between gap-4 p-6" style={{ borderBottom: "1px solid rgba(181,154,93,0.2)" }}>
         <div>
-          <div className="text-xl font-semibold">{title}</div>
-          {subtitle ? <div className="text-base text-slate-500 mt-1">{subtitle}</div> : null}
+          <div className="text-xl font-semibold" style={{ color: "#0F172A" }}>{title}</div>
+          {subtitle ? <div className="text-sm mt-1" style={{ color: "#64748B" }}>{subtitle}</div> : null}
         </div>
         {actions}
       </div>
@@ -643,10 +643,10 @@ function MiniTable({
   rows: (string | number)[][];
 }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-slate-100">
+    <div className="overflow-x-auto rounded-2xl" style={{ border: "1px solid rgba(181,154,93,0.2)" }}>
       <table className="w-full text-sm">
-        <thead className="bg-slate-50">
-          <tr className="text-left text-slate-500">
+        <thead style={{ backgroundColor: "#F0F4F8" }}>
+          <tr className="text-left" style={{ color: "#64748B" }}>
             {columns.map((c) => (
               <th key={c} className="px-4 py-3 font-medium">
                 {c}
@@ -656,9 +656,9 @@ function MiniTable({
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={i} className="border-t border-slate-100">
+            <tr key={i} style={{ borderTop: "1px solid #F0F4F8" }}>
               {r.map((cell, j) => (
-                <td key={j} className="px-4 py-3 text-slate-700">
+                <td key={j} className="px-4 py-3" style={{ color: "#1E293B" }}>
                   {cell}
                 </td>
               ))}

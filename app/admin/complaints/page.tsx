@@ -258,8 +258,8 @@ export default function ComplaintsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Complaints & Compliance</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage complaints, review evidence, and ensure platform compliance</p>
+          <h1 className="text-2xl font-bold" style={{ color: "#0F172A" }}>Complaints & Compliance</h1>
+          <p className="text-sm mt-1" style={{ color: "#64748B" }}>Manage complaints, review evidence, and ensure platform compliance</p>
         </div>
         {successMsg && (
           <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-2 rounded-lg">
@@ -277,12 +277,12 @@ export default function ComplaintsPage() {
           { label: "Resolved", value: resolvedCount, color: "text-green-600", bg: "bg-green-50", iconColor: "text-green-500", icon: (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>) },
           { label: "Critical Open", value: criticalCount, color: "text-red-600", bg: "bg-red-50", iconColor: "text-red-500", icon: (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>) },
         ].map(stat => (
-          <div key={stat.label} className={`${stat.bg} rounded-xl p-4`}>
+          <div key={stat.label} className={`${stat.bg} rounded-xl p-4`} style={{ border: "1px solid rgba(181,154,93,0.2)" }}>
             <div className="flex justify-between items-center mb-1">
               <span className={stat.iconColor}>{stat.icon}</span>
               <span className={`text-2xl font-bold ${stat.color}`}>{stat.value}</span>
             </div>
-            <p className="text-sm font-medium text-slate-600">{stat.label}</p>
+            <p className="text-sm font-medium" style={{ color: "#64748B" }}>{stat.label}</p>
           </div>
         ))}
       </div>
@@ -347,9 +347,10 @@ export default function ComplaintsPage() {
                 onClick={() => handleOpenDetail(c)}
                 className={[
                   "w-full text-left bg-white rounded-xl border p-4 hover:shadow-md transition",
-                  selected?.id === c.id ? "border-[#0ca6e8] shadow-md ring-1 ring-[#0ca6e8]" : "border-slate-200",
+                  selected?.id === c.id ? "ring-1 ring-[#0ca6e8]" : "",
                   c.priority === "critical" ? "border-l-4 border-l-red-500" : "",
                 ].join(" ")}
+                style={{ borderColor: selected?.id === c.id ? "#0ca6e8" : "rgba(181,154,93,0.25)", boxShadow: selected?.id === c.id ? "0 4px 12px rgba(12,166,232,0.15)" : undefined }}
               >
                 <div className="flex items-center gap-2 flex-wrap mb-2">
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${priorityColor(c.priority)}`}>{c.priority.toUpperCase()}</span>
@@ -370,8 +371,8 @@ export default function ComplaintsPage() {
                   )}
                   <span className="ml-auto text-xs text-slate-400">{formatDate(c.createdAt)}</span>
                 </div>
-                <p className="font-semibold text-slate-800 text-sm mb-1">{c.subject}</p>
-                <p className="text-slate-500 text-xs line-clamp-2">{c.description}</p>
+                <p className="font-semibold text-sm mb-1" style={{ color: "#0F172A" }}>{c.subject}</p>
+                <p className="text-xs line-clamp-2" style={{ color: "#64748B" }}>{c.description}</p>
                 <div className="flex gap-4 mt-1.5 text-xs text-slate-400">
                   <span>From: <span className="text-slate-600 font-medium">{c.reportedByName || "—"}</span></span>
                   {c.reportedAgainstName && <span>Against: <span className="text-slate-600 font-medium">{c.reportedAgainstName}</span></span>}
@@ -387,8 +388,8 @@ export default function ComplaintsPage() {
               <div className="bg-white rounded-xl border border-slate-200 p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900">{selected.subject}</h2>
-                    <p className="text-xs text-slate-400 mt-0.5">Filed {formatDate(selected.createdAt)}</p>
+                    <h2 className="text-lg font-bold" style={{ color: "#0F172A" }}>{selected.subject}</h2>
+                    <p className="text-xs mt-0.5" style={{ color: "#64748B" }}>Filed {formatDate(selected.createdAt)}</p>
                   </div>
                   <button onClick={() => setSelected(null)} className="text-slate-400 hover:text-slate-600 ml-2 mt-1">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -427,7 +428,7 @@ export default function ComplaintsPage() {
               </div>
 
               {/* ── PHOTO EVIDENCE COMPARISON ── */}
-              <div className="bg-white rounded-xl border border-slate-200 p-5">
+              <div className="bg-white rounded-xl border p-5" style={{ borderColor: "rgba(181,154,93,0.3)" }}>
                 <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
                   <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                   Evidence Comparison
@@ -489,7 +490,7 @@ export default function ComplaintsPage() {
               </div>
 
               {/* Admin actions */}
-              <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+              <div className="bg-white rounded-xl border p-5 space-y-4" style={{ borderColor: "rgba(181,154,93,0.3)" }}>
                 <h3 className="text-sm font-bold text-slate-900">Admin Actions</h3>
 
                 <div>
