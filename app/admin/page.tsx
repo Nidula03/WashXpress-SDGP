@@ -227,9 +227,9 @@ export default function AdminDashboard() {
   const customerRows = data?.customers?.map((c: any) => {
     const sub = subscriptionMap[c.id];
     return [
-      c.name || c.displayName || "—",
+      c.displayName || c.name || "—",
       c.email || "—",
-      c.phone || c.phoneNumber || "—",
+      c.phoneNumber || c.phone || "—",
       sub?.planName || sub?.planId || sub?.plan || c.plan || c.subscription?.plan || "—",
       c.status || "Active",
     ];
@@ -238,7 +238,7 @@ export default function AdminDashboard() {
   // Format washer rows for table (from providers collection)
   const washerRows = data?.providers?.map((w) => [
     w.displayName || w.name || "—",
-    w.phone || w.phoneNumber || "—",
+    w.phoneNumber || w.phone || "—",
     w.active ? "Yes" : "No",
     w.verified ? "Verified" : "Pending",
   ]) || [["—", "—", "—", "—"], ["—", "—", "—", "—"], ["—", "—", "—", "—"]];
@@ -304,9 +304,9 @@ export default function AdminDashboard() {
                     const subStatus = sub?.status ?? null;
                     return (
                   <tr key={c.id} style={{ borderTop: "1px solid #F0F4F8" }}>
-                    <td className="px-4 py-3" style={{ color: "#1E293B" }}>{c.name || c.displayName || "—"}</td>
+                    <td className="px-4 py-3" style={{ color: "#1E293B" }}>{c.displayName || c.name || "—"}</td>
                     <td className="px-4 py-3" style={{ color: "#1E293B" }}>{c.email || "—"}</td>
-                    <td className="px-4 py-3" style={{ color: "#1E293B" }}>{c.phone || c.phoneNumber || "—"}</td>
+                    <td className="px-4 py-3" style={{ color: "#1E293B" }}>{c.phoneNumber || c.phone || "—"}</td>
                     <td className="px-4 py-3">
                       {planLabel ? (
                         <div className="flex flex-col gap-0.5">
@@ -388,7 +388,7 @@ export default function AdminDashboard() {
                   <tr key={w.id} style={{ borderTop: "1px solid #F0F4F8" }}>
                     <td className="px-4 py-3" style={{ color: "#1E293B" }}>{w.displayName || w.name || "—"}</td>
                     <td className="px-4 py-3" style={{ color: "#1E293B" }}>{w.email || "—"}</td>
-                    <td className="px-4 py-3" style={{ color: "#1E293B" }}>{w.phone || w.phoneNumber || "—"}</td>
+                    <td className="px-4 py-3" style={{ color: "#1E293B" }}>{w.phoneNumber || w.phone || "—"}</td>
                     <td className="px-4 py-3" style={{ color: "#1E293B" }}>{(w.active || w.verified) ? "Yes" : "No"}</td>
                     <td className="px-4 py-3">
                       {w.verified ? (
@@ -441,8 +441,8 @@ export default function AdminDashboard() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
                 <input
                   type="text"
-                  value={editingCustomer.name || editingCustomer.displayName || ""}
-                  onChange={(e) => setEditingCustomer({ ...editingCustomer, name: e.target.value })}
+                  value={editingCustomer.displayName || editingCustomer.name || ""}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, displayName: e.target.value })}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
                 />
               </div>
@@ -459,8 +459,8 @@ export default function AdminDashboard() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
                 <input
                   type="text"
-                  value={editingCustomer.phone || editingCustomer.phoneNumber || ""}
-                  onChange={(e) => setEditingCustomer({ ...editingCustomer, phone: e.target.value })}
+                  value={editingCustomer.phoneNumber || editingCustomer.phone || ""}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, phoneNumber: e.target.value })}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
                 />
               </div>
@@ -535,8 +535,8 @@ export default function AdminDashboard() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
                 <input
                   type="text"
-                  value={editingWasher.phone || editingWasher.phoneNumber || ""}
-                  onChange={(e) => setEditingWasher({ ...editingWasher, phone: e.target.value })}
+                  value={editingWasher.phoneNumber || editingWasher.phone || ""}
+                  onChange={(e) => setEditingWasher({ ...editingWasher, phoneNumber: e.target.value })}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
                 />
               </div>

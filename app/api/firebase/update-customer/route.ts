@@ -6,7 +6,7 @@ import { adminDb } from "@/lib/firebase-admin";
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { id, name, email, phone, plan, status } = body;
+        const { id, name, displayName, email, phone, plan, status } = body;
 
         if (!id) {
             return NextResponse.json({ ok: false, error: "Missing customer id" }, { status: 400 });
@@ -15,6 +15,7 @@ export async function POST(request: Request) {
         // Update the document in Firestore
         await adminDb.collection("customers").doc(id).update({
             ...(name !== undefined && { name }),
+            ...(displayName !== undefined && { displayName }),
             ...(email !== undefined && { email }),
             ...(phone !== undefined && { phone }),
             ...(plan !== undefined && { plan }),
