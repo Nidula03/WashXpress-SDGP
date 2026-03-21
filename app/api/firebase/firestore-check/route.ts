@@ -8,7 +8,16 @@ export async function GET() {
     console.log("Firestore check initiated - fetching all collections");
 
     // Define collections to fetch
-    const collectionNames = ["bookings", "customers", "password_resets", "providers", "subscriptions", "users", "washers"];
+    const collectionNames = [
+      "bookings",
+      "customers",
+      "password_resets",
+      "providers",
+      "subscriptions",
+      "users",
+      "washers",
+      "services"
+    ];
 
     // Fetch all collections in parallel using Admin SDK
     const results: Record<string, any[]> = {};
@@ -22,6 +31,28 @@ export async function GET() {
         }));
       })
     );
+
+    // Map customerName and serviceName onto bookings if missing
+    if (results.bookings && results.customers && results.services) {
+      const customersMap = Object.fromEntries(results.customers.map(c => [c.id, c]));
+      const servicesMap = Object.fromEntries(results.services.map(s => [s.id, s]));
+      
+      results.bookings = results.bookings.map(b => {
+        // Find customer name
+        const c = customersMap[b.customerId || b.userId];
+        const computedCustomerName = c ? (c.name || c.displayName || c.firstName || c.email) : null;
+        
+        // Find service name
+        const s = servicesMap[b.serviceId];
+        const computedServiceName = s ? (s.name || s.title || s.type) : null;
+
+        return {
+          ...b,
+          customerName: b.customerName || computedCustomerName || null,
+          serviceName: b.serviceName || b.serviceType || computedServiceName || null,
+        };
+      });
+    }
 
     return NextResponse.json({
       ok: true,

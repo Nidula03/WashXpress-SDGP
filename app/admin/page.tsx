@@ -237,7 +237,7 @@ export default function AdminDashboard() {
 
   // Format washer rows for table (from providers collection)
   const washerRows = data?.providers?.map((w) => [
-    w.name || w.displayName || "—",
+    w.displayName || w.name || "—",
     w.phone || w.phoneNumber || "—",
     w.active ? "Yes" : "No",
     w.verified ? "Verified" : "Pending",
@@ -386,7 +386,7 @@ export default function AdminDashboard() {
                   })
                   .map((w: any) => (
                   <tr key={w.id} style={{ borderTop: "1px solid #F0F4F8" }}>
-                    <td className="px-4 py-3" style={{ color: "#1E293B" }}>{w.name || w.displayName || "—"}</td>
+                    <td className="px-4 py-3" style={{ color: "#1E293B" }}>{w.displayName || w.name || "—"}</td>
                     <td className="px-4 py-3" style={{ color: "#1E293B" }}>{w.email || "—"}</td>
                     <td className="px-4 py-3" style={{ color: "#1E293B" }}>{w.phone || w.phoneNumber || "—"}</td>
                     <td className="px-4 py-3" style={{ color: "#1E293B" }}>{(w.active || w.verified) ? "Yes" : "No"}</td>
@@ -517,8 +517,8 @@ export default function AdminDashboard() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
                 <input
                   type="text"
-                  value={editingWasher.name || editingWasher.displayName || ""}
-                  onChange={(e) => setEditingWasher({ ...editingWasher, name: e.target.value })}
+                  value={editingWasher.displayName || editingWasher.name || ""}
+                  onChange={(e) => setEditingWasher({ ...editingWasher, displayName: e.target.value })}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
                 />
               </div>
