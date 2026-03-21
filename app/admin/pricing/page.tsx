@@ -205,13 +205,13 @@ export default function PricingPage() {
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Monthly Allowances</p>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { label: "Washes", val: plan.allowances?.washes ?? 0, icon: "🚿" },
-                    { label: "Interior", val: plan.allowances?.interiorCleans ?? 0, icon: "🧹" },
-                    { label: "Tires", val: plan.allowances?.tireCleans ?? 0, icon: "⚙️" },
-                    { label: "Full Detail", val: plan.allowances?.fullDetails ?? 0, icon: "✨" },
+                    { label: "Washes", val: plan.allowances?.washes ?? 0, icon: (<svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>) },
+                    { label: "Interior", val: plan.allowances?.interiorCleans ?? 0, icon: (<svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 512 512"><rect x="196" y="20" width="120" height="80" rx="16" strokeWidth={26}/><rect x="226" y="100" width="60" height="30" rx="4" strokeWidth={22}/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={26} d="M130 130 Q110 140 110 200 v160 Q110 390 150 395 h212 Q402 390 402 360 V200 Q402 140 382 130 Q340 115 256 115 Q172 115 130 130z"/><rect x="196" y="130" width="120" height="110" rx="8" strokeWidth={20}/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={22} d="M110 360 Q108 395 130 400 l126 0 l126 0 Q404 395 402 360"/><rect x="130" y="400" width="252" height="72" rx="22" strokeWidth={26}/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={20} d="M130 400 l30-40 M382 400 l-30-40"/></svg>) },
+                    { label: "Tires", val: plan.allowances?.tireCleans ?? 0, icon: (<svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 512 512"><circle cx="256" cy="256" r="240" strokeWidth={26}/><circle cx="256" cy="256" r="196" strokeWidth={22}/><circle cx="256" cy="256" r="140" strokeWidth={22}/><circle cx="256" cy="256" r="28" strokeWidth={20}/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={20} d="M256 116 L256 228 M256 284 L256 396 M371 186 L277 241 M235 271 L141 326 M371 326 L277 271 M235 241 L141 186"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={24} d="M256 16 v30 M256 466 v30 M16 256 h30 M466 256 h30 M88 88 l21 21 M403 403 l21 21 M424 88 l-21 21 M89 403 l-21 21 M172 26 l10 28 M330 458 l10 28 M26 172 l28 10 M458 330 l28 10 M26 340 l28-10 M458 172 l28-10 M172 486 l10-28 M330 54 l10-28"/></svg>) },
+                    { label: "Full Detail", val: plan.allowances?.fullDetails ?? 0, icon: (<svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>) },
                   ].map((a) => (
                     <div key={a.label} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
-                      <span className="text-base">{a.icon}</span>
+                      <span>{a.icon}</span>
                       <div>
                         <p className="text-xs text-slate-500">{a.label}</p>
                         <p className="text-sm font-bold text-slate-800">{a.val}</p>
@@ -230,7 +230,7 @@ export default function PricingPage() {
                   {plan.isActive ? "Deactivate" : "Activate"}
                 </button>
                 <button onClick={() => setDeleteConfirm(plan.id)} className="px-3 py-2 rounded-lg text-sm font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100">
-                  🗑
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 </button>
               </div>
             </div>
@@ -283,10 +283,10 @@ export default function PricingPage() {
                   <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">Monthly Allowances</label>
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { key: "washes", label: "🚿 Washes" },
-                      { key: "interiorCleans", label: "🧹 Interior Cleans" },
-                      { key: "tireCleans", label: "⚙️ Tire Cleanings" },
-                      { key: "fullDetails", label: "✨ Full Details" },
+                      { key: "washes", label: "Washes" },
+                      { key: "interiorCleans", label: "Interior Cleans" },
+                      { key: "tireCleans", label: "Tire Cleanings" },
+                      { key: "fullDetails", label: "Full Details" },
                     ].map(({ key, label }) => (
                       <div key={key}>
                         <label className="text-xs text-slate-500">{label}</label>
@@ -305,9 +305,11 @@ export default function PricingPage() {
                   <div className="space-y-2 mb-2">
                     {editingPlan.features.map((f, i) => (
                       <div key={i} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
-                        <span className="text-green-600 font-bold">✓</span>
+                        <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                         <span className="text-sm text-slate-700 flex-1">{f}</span>
-                        <button onClick={() => removeFeature(i)} className="text-red-400 hover:text-red-600 text-xs">✕</button>
+                        <button onClick={() => removeFeature(i)} className="text-red-400 hover:text-red-600">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
                       </div>
                     ))}
                   </div>

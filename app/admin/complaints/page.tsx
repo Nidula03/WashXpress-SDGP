@@ -272,14 +272,14 @@ export default function ComplaintsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Open", value: openCount, color: "text-blue-600", bg: "bg-blue-50", icon: "🔵" },
-          { label: "Under Review", value: reviewCount, color: "text-purple-600", bg: "bg-purple-50", icon: "🔍" },
-          { label: "Resolved", value: resolvedCount, color: "text-green-600", bg: "bg-green-50", icon: "✅" },
-          { label: "Critical Open", value: criticalCount, color: "text-red-600", bg: "bg-red-50", icon: "🚨" },
+          { label: "Open", value: openCount, color: "text-blue-600", bg: "bg-blue-50", iconColor: "text-blue-500", icon: (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth={2} /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01" /></svg>) },
+          { label: "Under Review", value: reviewCount, color: "text-purple-600", bg: "bg-purple-50", iconColor: "text-purple-500", icon: (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>) },
+          { label: "Resolved", value: resolvedCount, color: "text-green-600", bg: "bg-green-50", iconColor: "text-green-500", icon: (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>) },
+          { label: "Critical Open", value: criticalCount, color: "text-red-600", bg: "bg-red-50", iconColor: "text-red-500", icon: (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>) },
         ].map(stat => (
           <div key={stat.label} className={`${stat.bg} rounded-xl p-4`}>
             <div className="flex justify-between items-center mb-1">
-              <span className="text-xl">{stat.icon}</span>
+              <span className={stat.iconColor}>{stat.icon}</span>
               <span className={`text-2xl font-bold ${stat.color}`}>{stat.value}</span>
             </div>
             <p className="text-sm font-medium text-slate-600">{stat.label}</p>
@@ -354,9 +354,19 @@ export default function ComplaintsPage() {
                 <div className="flex items-center gap-2 flex-wrap mb-2">
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${priorityColor(c.priority)}`}>{c.priority.toUpperCase()}</span>
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${statusColor(c.status)}`}>{c.status.replace("_", " ")}</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">{c.type === "customer" ? "👤" : "🧹"}</span>
+                  <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                    {c.type === "customer" ? (
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    ) : (
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg>
+                    )}
+                    {c.type}
+                  </span>
                   {c.evidencePhotos && c.evidencePhotos.length > 0 && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">📷 {c.evidencePhotos.length} photo{c.evidencePhotos.length > 1 ? "s" : ""}</span>
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      {c.evidencePhotos.length} photo{c.evidencePhotos.length > 1 ? "s" : ""}
+                    </span>
                   )}
                   <span className="ml-auto text-xs text-slate-400">{formatDate(c.createdAt)}</span>
                 </div>
@@ -419,7 +429,8 @@ export default function ComplaintsPage() {
               {/* ── PHOTO EVIDENCE COMPARISON ── */}
               <div className="bg-white rounded-xl border border-slate-200 p-5">
                 <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                  <span>📸</span> Evidence Comparison
+                  <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  Evidence Comparison
                   <span className="text-xs font-normal text-slate-400 ml-1">Use this to give an unbiased verdict</span>
                 </h3>
 
@@ -455,7 +466,10 @@ export default function ComplaintsPage() {
                         )}
                         {!bookingEvidence?.damageReportPhotos?.length && !loadingEvidence && (
                           <div className="mt-2 bg-amber-50 border border-amber-100 rounded-lg p-3">
-                            <p className="text-xs text-amber-600 font-semibold">⚠ No pre-job damage report</p>
+                            <p className="text-xs text-amber-600 font-semibold flex items-center gap-1">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                              No pre-job damage report
+                            </p>
                             <p className="text-xs text-amber-500 mt-0.5">Washer did not document pre-existing damage</p>
                           </div>
                         )}
@@ -534,7 +548,8 @@ export default function ComplaintsPage() {
             <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0ca6e8]" /></div>
           ) : filteredReviews.length === 0 ? (
             <div className="bg-white rounded-xl border border-slate-200 p-16 text-center">
-              <p className="text-4xl mb-3">⭐</p><p className="text-slate-400">No reviews yet</p>
+              <svg className="w-10 h-10 text-amber-300 mx-auto mb-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+              <p className="text-slate-400">No reviews yet</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -556,7 +571,10 @@ export default function ComplaintsPage() {
                   </div>
                   {r.rating <= 2 && (
                     <div className="bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                      <p className="text-xs text-red-600 font-semibold">⚠ Low rating — may need follow-up</p>
+                      <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        Low rating — may need follow-up
+                      </p>
                     </div>
                   )}
                 </div>
@@ -571,13 +589,13 @@ export default function ComplaintsPage() {
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: "Avg Review Rating", value: avgRating, icon: "⭐", color: "text-amber-600", bg: "bg-amber-50" },
-              { label: "Low Rating Reviews", value: lowRatingReviews, icon: "⚠️", color: "text-red-600", bg: "bg-red-50" },
-              { label: "Total Complaints", value: complaints.length, icon: "📋", color: "text-blue-600", bg: "bg-blue-50" },
-              { label: "Resolution Rate", value: complaints.length > 0 ? `${Math.round((resolvedCount / complaints.length) * 100)}%` : "—", icon: "✅", color: "text-green-600", bg: "bg-green-50" },
+              { label: "Avg Review Rating", value: avgRating, iconColor: "text-amber-500", color: "text-amber-600", bg: "bg-amber-50", icon: (<svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>) },
+              { label: "Low Rating Reviews", value: lowRatingReviews, iconColor: "text-red-500", color: "text-red-600", bg: "bg-red-50", icon: (<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>) },
+              { label: "Total Complaints", value: complaints.length, iconColor: "text-blue-500", color: "text-blue-600", bg: "bg-blue-50", icon: (<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>) },
+              { label: "Resolution Rate", value: complaints.length > 0 ? `${Math.round((resolvedCount / complaints.length) * 100)}%` : "—", iconColor: "text-green-500", color: "text-green-600", bg: "bg-green-50", icon: (<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>) },
             ].map(m => (
               <div key={m.label} className={`${m.bg} rounded-xl p-5`}>
-                <div className="text-2xl mb-2">{m.icon}</div>
+                <div className={`mb-2 ${m.iconColor}`}>{m.icon}</div>
                 <div className={`text-3xl font-bold ${m.color} mb-1`}>{m.value}</div>
                 <p className="text-sm font-medium text-slate-600">{m.label}</p>
               </div>

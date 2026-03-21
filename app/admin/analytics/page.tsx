@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import React from "react";
 
 interface AnalyticsData {
   totalRevenue: number;
@@ -26,11 +27,11 @@ function StatCard({
   value: string | number;
   sub?: string;
   color: string;
-  icon: string;
+  icon: React.ReactNode;
 }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-5 flex items-start gap-4 shadow-sm">
-      <div className={`text-2xl p-3 rounded-lg ${color}`}>{icon}</div>
+      <div className={`p-3 rounded-lg ${color}`}>{icon}</div>
       <div>
         <p className="text-sm text-slate-500 font-medium">{title}</p>
         <p className="text-2xl font-bold text-slate-800 mt-0.5">{value}</p>
@@ -160,28 +161,44 @@ export default function AnalyticsPage() {
               value={`LKR ${data.totalRevenue.toLocaleString()}`}
               sub={`From ${data.paidBookings} paid bookings`}
               color="bg-blue-50 text-blue-600"
-              icon="💰"
+              icon={
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              }
             />
             <StatCard
               title="Total Bookings"
               value={data.totalBookings}
               sub={`Last ${range} days`}
               color="bg-purple-50 text-purple-600"
-              icon="📋"
+              icon={
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              }
             />
             <StatCard
               title="Active Customers"
               value={data.totalCustomers}
               sub="Registered accounts"
               color="bg-green-50 text-green-600"
-              icon="👥"
+              icon={
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              }
             />
             <StatCard
               title="Active Washers"
               value={data.totalWashers}
               sub="Certified providers"
               color="bg-orange-50 text-orange-600"
-              icon="🚗"
+              icon={
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+              }
             />
           </div>
 
